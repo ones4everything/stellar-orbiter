@@ -8,12 +8,12 @@ interface ProductCalloutsProps {
   scrollProgress: number;
 }
 
-// Section 2: Best Selling (0.20 - 0.45)
+// Section 2: Best Selling (0.25 - 0.50)
 const bestSellingProducts = [
   {
     id: "neural-link-pro",
     name: "Neural Link Pro",
-    description: "Best-selling brain-computer interface",
+    description: "Best-selling brain-computer interface with 99.9% accuracy",
     price: 2499,
     priceDisplay: "$2,499",
     icon: Brain,
@@ -23,21 +23,41 @@ const bestSellingProducts = [
   {
     id: "quantum-core-x",
     name: "Quantum Core X",
-    description: "Top-rated quantum processor",
+    description: "Top-rated quantum processor with 1000 qubits",
     price: 4999,
     priceDisplay: "$4,999",
     icon: Atom,
     badge: "⭐ Top Rated",
     color: "#8b5cf6",
   },
+  {
+    id: "holo-display-7",
+    name: "Holo Display 7",
+    description: "Crystal clear holographic display system",
+    price: 1899,
+    priceDisplay: "$1,899",
+    icon: Glasses,
+    badge: "📈 Trending",
+    color: "#06b6d4",
+  },
+  {
+    id: "cyber-core-alpha",
+    name: "Cyber Core Alpha",
+    description: "Portable quantum computing powerhouse",
+    price: 3299,
+    priceDisplay: "$3,299",
+    icon: Laptop,
+    badge: "💎 Popular",
+    color: "#a855f7",
+  },
 ];
 
-// Section 3: Seasonal Collection (0.45 - 0.70)
+// Section 3: Seasonal Collection (0.50 - 0.75)
 const seasonalProducts = [
   {
     id: "spring-neural",
-    name: "Spring Edition",
-    description: "Limited spring collection neural interface",
+    name: "Spring Bloom",
+    description: "Limited spring collection neural interface with nature-inspired design",
     price: 2799,
     priceDisplay: "$2,799",
     icon: Brain,
@@ -46,9 +66,20 @@ const seasonalProducts = [
     color: "#22c55e",
   },
   {
+    id: "spring-lens",
+    name: "Petal Vision",
+    description: "AR glasses with spring floral overlays",
+    price: 1699,
+    priceDisplay: "$1,699",
+    icon: Glasses,
+    seasonIcon: Flower2,
+    season: "Spring",
+    color: "#4ade80",
+  },
+  {
     id: "summer-quantum",
-    name: "Summer Core",
-    description: "Summer special quantum processor",
+    name: "Solar Core",
+    description: "Summer special quantum processor with solar efficiency",
     price: 5499,
     priceDisplay: "$5,499",
     icon: Atom,
@@ -57,9 +88,20 @@ const seasonalProducts = [
     color: "#facc15",
   },
   {
+    id: "summer-deck",
+    name: "Beach Deck",
+    description: "Water-resistant cyber deck for summer adventures",
+    price: 2999,
+    priceDisplay: "$2,999",
+    icon: Laptop,
+    seasonIcon: Sun,
+    season: "Summer",
+    color: "#fbbf24",
+  },
+  {
     id: "autumn-lens",
-    name: "Autumn Lens",
-    description: "Fall collection AR glasses",
+    name: "Harvest Lens",
+    description: "Fall collection AR glasses with warm amber tones",
     price: 1999,
     priceDisplay: "$1,999",
     icon: Glasses,
@@ -68,9 +110,20 @@ const seasonalProducts = [
     color: "#f97316",
   },
   {
+    id: "autumn-neural",
+    name: "Ember Link",
+    description: "Autumn edition neural interface with cozy aesthetics",
+    price: 2599,
+    priceDisplay: "$2,599",
+    icon: Brain,
+    seasonIcon: Leaf,
+    season: "Autumn",
+    color: "#ea580c",
+  },
+  {
     id: "winter-deck",
-    name: "Winter Deck",
-    description: "Holiday edition cyber deck",
+    name: "Frost Deck",
+    description: "Holiday edition cyber deck with ice-cool design",
     price: 3599,
     priceDisplay: "$3,599",
     icon: Laptop,
@@ -78,14 +131,25 @@ const seasonalProducts = [
     season: "Winter",
     color: "#00ffff",
   },
+  {
+    id: "winter-quantum",
+    name: "Cryo Core",
+    description: "Supercooled quantum processor for peak performance",
+    price: 6999,
+    priceDisplay: "$6,999",
+    icon: Atom,
+    seasonIcon: Snowflake,
+    season: "Winter",
+    color: "#38bdf8",
+  },
 ];
 
-// Section 4: Featured Collection (0.70 - 1.0)
+// Section 4: Featured Collection (0.75 - 1.0)
 const featuredProducts = [
   {
     id: "holo-lens-ultra",
     name: "Holo Lens Ultra",
-    description: "Premium holographic AR experience",
+    description: "Premium holographic AR experience with 8K resolution",
     price: 2999,
     priceDisplay: "$2,999",
     icon: Glasses,
@@ -95,7 +159,7 @@ const featuredProducts = [
   {
     id: "cyber-deck-elite",
     name: "Cyber Deck Elite",
-    description: "Elite portable computing powerhouse",
+    description: "Elite portable computing with quantum acceleration",
     price: 4299,
     priceDisplay: "$4,299",
     icon: Laptop,
@@ -104,13 +168,43 @@ const featuredProducts = [
   },
   {
     id: "neuro-boost",
-    name: "Neuro Boost",
-    description: "Neural enhancement accelerator",
+    name: "Neuro Boost X",
+    description: "Neural enhancement accelerator with AI assist",
     price: 1599,
     priceDisplay: "$1,599",
     icon: Zap,
     badge: "⚡ New",
     color: "#10b981",
+  },
+  {
+    id: "quantum-vision",
+    name: "Quantum Vision",
+    description: "See the quantum realm with enhanced perception",
+    price: 3799,
+    priceDisplay: "$3,799",
+    icon: Glasses,
+    badge: "🌟 Exclusive",
+    color: "#ec4899",
+  },
+  {
+    id: "apex-neural",
+    name: "Apex Neural",
+    description: "Ultimate brain-computer interface for professionals",
+    price: 5999,
+    priceDisplay: "$5,999",
+    icon: Brain,
+    badge: "🏆 Best",
+    color: "#f59e0b",
+  },
+  {
+    id: "infinity-core",
+    name: "Infinity Core",
+    description: "Unlimited quantum processing power in your hands",
+    price: 8999,
+    priceDisplay: "$8,999",
+    icon: Atom,
+    badge: "♾️ Ultimate",
+    color: "#7c3aed",
   },
 ];
 
@@ -139,46 +233,83 @@ const ProductCallouts = ({ visible, scrollProgress }: ProductCalloutsProps) => {
     setTimeout(() => setAddedId(null), 1500);
   };
 
-  // Section visibility calculations
+  // Section visibility calculations - clean 4-section transitions
+  // Section 1: Menu (0 - 0.25)
+  // Section 2: Best Selling (0.25 - 0.50)
+  // Section 3: Seasonal (0.50 - 0.75)
+  // Section 4: Featured (0.75 - 1.0)
+  
   const getBestSellingOpacity = () => {
-    if (scrollProgress < 0.18) return 0;
-    if (scrollProgress > 0.42) return Math.max(0, 1 - (scrollProgress - 0.42) / 0.08);
-    return Math.min(1, (scrollProgress - 0.18) / 0.1);
+    const fadeIn = 0.22;
+    const peakStart = 0.28;
+    const peakEnd = 0.45;
+    const fadeOut = 0.52;
+    
+    if (scrollProgress < fadeIn) return 0;
+    if (scrollProgress < peakStart) return (scrollProgress - fadeIn) / (peakStart - fadeIn);
+    if (scrollProgress < peakEnd) return 1;
+    if (scrollProgress < fadeOut) return 1 - (scrollProgress - peakEnd) / (fadeOut - peakEnd);
+    return 0;
   };
 
   const getSeasonalOpacity = () => {
-    if (scrollProgress < 0.40) return 0;
-    if (scrollProgress > 0.68) return Math.max(0, 1 - (scrollProgress - 0.68) / 0.08);
-    return Math.min(1, (scrollProgress - 0.40) / 0.1);
+    const fadeIn = 0.47;
+    const peakStart = 0.53;
+    const peakEnd = 0.70;
+    const fadeOut = 0.77;
+    
+    if (scrollProgress < fadeIn) return 0;
+    if (scrollProgress < peakStart) return (scrollProgress - fadeIn) / (peakStart - fadeIn);
+    if (scrollProgress < peakEnd) return 1;
+    if (scrollProgress < fadeOut) return 1 - (scrollProgress - peakEnd) / (fadeOut - peakEnd);
+    return 0;
   };
 
   const getFeaturedOpacity = () => {
-    if (scrollProgress < 0.65) return 0;
-    return Math.min(1, (scrollProgress - 0.65) / 0.1);
+    const fadeIn = 0.72;
+    const peakStart = 0.78;
+    
+    if (scrollProgress < fadeIn) return 0;
+    if (scrollProgress < peakStart) return (scrollProgress - fadeIn) / (peakStart - fadeIn);
+    return 1;
   };
 
   const getSectionTitle = () => {
-    if (scrollProgress >= 0.65) return { title: "Featured Collection", icon: Crown, color: "#d946ef" };
-    if (scrollProgress >= 0.40) return { title: "Seasonal Collection", icon: Star, color: "#f97316" };
-    if (scrollProgress >= 0.18) return { title: "Best Selling", icon: TrendingUp, color: "#f43f5e" };
+    if (scrollProgress >= 0.72) return { title: "Featured Collection", icon: Crown, color: "#d946ef", section: 4 };
+    if (scrollProgress >= 0.47) return { title: "Seasonal Collection", icon: Star, color: "#f97316", section: 3 };
+    if (scrollProgress >= 0.22) return { title: "Best Selling", icon: TrendingUp, color: "#f43f5e", section: 2 };
     return null;
   };
 
-  // Mobile-optimized card positions
+  // Mobile-optimized card positions - 2 column grid for more products
   const getMobilePosition = (index: number, total: number) => {
-    const spacing = Math.min(120, 280 / total);
-    const startY = -(total - 1) * spacing / 2;
-    return { x: 0, y: startY + index * spacing };
+    const columns = total > 4 ? 2 : 1;
+    const rows = Math.ceil(total / columns);
+    const row = Math.floor(index / columns);
+    const col = index % columns;
+    
+    const spacingY = Math.min(100, 240 / rows);
+    const spacingX = columns > 1 ? 160 : 0;
+    
+    const startY = -(rows - 1) * spacingY / 2;
+    const startX = -(columns - 1) * spacingX / 2;
+    
+    return { 
+      x: startX + col * spacingX, 
+      y: startY + row * spacingY 
+    };
   };
 
-  // Desktop orbit positions
+  // Desktop orbit positions - dynamic radius based on product count
   const getDesktopPosition = (index: number, total: number, baseRadius: number) => {
     const angleStep = (2 * Math.PI) / total;
-    const angle = index * angleStep - Math.PI / 2 + scrollProgress * 0.5;
-    const radius = baseRadius + scrollProgress * 30;
+    const angle = index * angleStep - Math.PI / 2 + scrollProgress * Math.PI * 0.3;
+    const radius = baseRadius + (total > 4 ? 20 : 0);
+    const verticalScale = total > 6 ? 0.6 : 0.5;
+    
     return {
       x: Math.cos(angle) * radius,
-      y: Math.sin(angle) * radius * 0.5,
+      y: Math.sin(angle) * radius * verticalScale,
     };
   };
 
@@ -373,25 +504,36 @@ const ProductCallouts = ({ visible, scrollProgress }: ProductCalloutsProps) => {
 
       {/* Progress indicator */}
       <motion.div 
-        className="absolute bottom-20 md:bottom-24 left-1/2 -translate-x-1/2 flex gap-2"
-        animate={{ opacity: visible ? 0.8 : 0 }}
+        className="absolute bottom-16 md:bottom-20 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-30"
+        animate={{ opacity: visible ? 1 : 0 }}
       >
-        {[1, 2, 3, 4].map((section) => {
-          const isActive = 
-            (section === 1 && scrollProgress < 0.20) ||
-            (section === 2 && scrollProgress >= 0.18 && scrollProgress < 0.42) ||
-            (section === 3 && scrollProgress >= 0.40 && scrollProgress < 0.68) ||
-            (section === 4 && scrollProgress >= 0.65);
-          
-          return (
-            <div
-              key={section}
-              className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                isActive ? "bg-primary scale-125" : "bg-muted"
-              }`}
-            />
-          );
-        })}
+        <div className="flex gap-3">
+          {[
+            { section: 1, label: "Menu", range: [0, 0.25] },
+            { section: 2, label: "Best", range: [0.22, 0.52] },
+            { section: 3, label: "Season", range: [0.47, 0.77] },
+            { section: 4, label: "Featured", range: [0.72, 1.0] },
+          ].map(({ section, label, range }) => {
+            const isActive = scrollProgress >= range[0] && scrollProgress < range[1];
+            const isPast = scrollProgress >= range[1];
+            
+            return (
+              <div key={section} className="flex flex-col items-center gap-1">
+                <div
+                  className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                    isActive ? "bg-primary scale-150 shadow-lg shadow-primary/50" : 
+                    isPast ? "bg-primary/60" : "bg-muted/50"
+                  }`}
+                />
+                <span className={`text-[9px] uppercase tracking-wide transition-colors duration-300 ${
+                  isActive ? "text-primary font-medium" : "text-muted-foreground/50"
+                }`}>
+                  {label}
+                </span>
+              </div>
+            );
+          })}
+        </div>
       </motion.div>
     </div>
   );
