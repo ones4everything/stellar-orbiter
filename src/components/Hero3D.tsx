@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useMemo, useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import Hero3DScene from "./Hero3DScene";
 import CategoryNodes from "./CategoryNodes";
@@ -7,9 +7,34 @@ import ParallaxText from "./ParallaxText";
 import SeasonalParticles from "./SeasonalParticles";
 import ScrollDebugOverlay from "./ScrollDebugOverlay";
 
+const DEBUG_STORAGE_KEY = "lovable:hero3d:debug-overlay";
+
 const Hero3D = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scrollValue, setScrollValue] = useState(0);
+
+  const isDev = import.meta.env.DEV;
+  const defaultDebugEnabled = useMemo(() => {
+    if (!isDev) return false;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("debug") === "1") return true;
+      return localStorage.getItem(DEBUG_STORAGE_KEY) === "true";
+    } catch {
+      return false;
+    }
+  }, [isDev]);
+
+  const [debugEnabled, setDebugEnabled] = useState(defaultDebugEnabled);
+
+  useEffect(() => {
+    if (!isDev) return;
+    try {
+      localStorage.setItem(DEBUG_STORAGE_KEY, String(debugEnabled));
+    } catch {
+      // ignore
+    }
+  }, [debugEnabled, isDev]);
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -43,21 +68,22 @@ const Hero3D = () => {
         style={{ scale }}
       >
         {/* Seasonal background gradient */}
-        <div 
+        <div
           className="absolute inset-0 transition-colors duration-1000"
           style={{
-            background: scrollValue < 0.50 
-              ? 'linear-gradient(to bottom, hsl(222, 47%, 3%), hsl(222, 60%, 8%), hsl(222, 47%, 3%))'
-              : scrollValue < 0.625 
-                ? 'linear-gradient(to bottom, hsl(350, 30%, 5%), hsl(330, 40%, 10%), hsl(350, 30%, 5%))' // Spring - pink tint
-                : scrollValue < 0.75 
-                  ? 'linear-gradient(to bottom, hsl(40, 30%, 5%), hsl(30, 50%, 8%), hsl(40, 30%, 5%))' // Summer - warm gold
-                  : scrollValue < 0.875 
-                    ? 'linear-gradient(to bottom, hsl(25, 40%, 5%), hsl(15, 50%, 8%), hsl(25, 40%, 5%))' // Autumn - orange/brown
-                    : 'linear-gradient(to bottom, hsl(210, 50%, 5%), hsl(220, 60%, 10%), hsl(210, 50%, 5%))' // Winter - cool blue
+            background:
+              scrollValue < 0.50
+                ? "linear-gradient(to bottom, hsl(222, 47%, 3%), hsl(222, 60%, 8%), hsl(222, 47%, 3%))"
+                : scrollValue < 0.625
+                  ? "linear-gradient(to bottom, hsl(350, 30%, 5%), hsl(330, 40%, 10%), hsl(350, 30%, 5%))" // Spring - pink tint
+                  : scrollValue < 0.75
+                    ? "linear-gradient(to bottom, hsl(40, 30%, 5%), hsl(30, 50%, 8%), hsl(40, 30%, 5%))" // Summer - warm gold
+                    : scrollValue < 0.875
+                      ? "linear-gradient(to bottom, hsl(25, 40%, 5%), hsl(15, 50%, 8%), hsl(25, 40%, 5%))" // Autumn - orange/brown
+                      : "linear-gradient(to bottom, hsl(210, 50%, 5%), hsl(220, 60%, 10%), hsl(210, 50%, 5%))", // Winter - cool blue
           }}
         />
-        
+
         {/* Radial glow behind planet - seasonal color */}
         <motion.div
           className="absolute inset-0 flex items-center justify-center pointer-events-none"
@@ -65,18 +91,19 @@ const Hero3D = () => {
             opacity: useTransform(scrollYProgress, [0, 0.3], [0.3, 0.6]),
           }}
         >
-          <div 
+          <div
             className="w-[600px] h-[600px] rounded-full blur-3xl transition-colors duration-1000"
             style={{
-              background: scrollValue < 0.50 
-                ? 'radial-gradient(circle, hsla(180, 100%, 50%, 0.1), hsla(300, 100%, 50%, 0.05), transparent)'
-                : scrollValue < 0.625 
-                  ? 'radial-gradient(circle, hsla(330, 80%, 70%, 0.15), hsla(350, 60%, 50%, 0.08), transparent)' // Spring
-                  : scrollValue < 0.75 
-                    ? 'radial-gradient(circle, hsla(45, 100%, 50%, 0.15), hsla(30, 80%, 40%, 0.08), transparent)' // Summer
-                    : scrollValue < 0.875 
-                      ? 'radial-gradient(circle, hsla(25, 90%, 50%, 0.15), hsla(15, 70%, 30%, 0.08), transparent)' // Autumn
-                      : 'radial-gradient(circle, hsla(200, 80%, 60%, 0.15), hsla(220, 70%, 40%, 0.08), transparent)' // Winter
+              background:
+                scrollValue < 0.50
+                  ? "radial-gradient(circle, hsla(180, 100%, 50%, 0.1), hsla(300, 100%, 50%, 0.05), transparent)"
+                  : scrollValue < 0.625
+                    ? "radial-gradient(circle, hsla(330, 80%, 70%, 0.15), hsla(350, 60%, 50%, 0.08), transparent)" // Spring
+                    : scrollValue < 0.75
+                      ? "radial-gradient(circle, hsla(45, 100%, 50%, 0.15), hsla(30, 80%, 40%, 0.08), transparent)" // Summer
+                      : scrollValue < 0.875
+                        ? "radial-gradient(circle, hsla(25, 90%, 50%, 0.15), hsla(15, 70%, 30%, 0.08), transparent)" // Autumn
+                        : "radial-gradient(circle, hsla(200, 80%, 60%, 0.15), hsla(220, 70%, 40%, 0.08), transparent)", // Winter
             }}
           />
         </motion.div>
@@ -89,8 +116,21 @@ const Hero3D = () => {
         {/* Seasonal Particles */}
         <SeasonalParticles scrollProgress={scrollValue} />
 
-        {/* Debug Overlay */}
-        <ScrollDebugOverlay scrollProgress={scrollValue} />
+        {/* Debug Overlay (dev-only; hidden by default) */}
+        {debugEnabled && <ScrollDebugOverlay scrollProgress={scrollValue} />}
+
+        {/* Debug toggle */}
+        {isDev && (
+          <button
+            type="button"
+            className="absolute top-24 right-4 z-50 pointer-events-auto rounded-md border border-border bg-background/80 backdrop-blur px-3 py-1.5 text-xs text-foreground hover:bg-background"
+            onClick={() => setDebugEnabled((v) => !v)}
+            aria-pressed={debugEnabled}
+            aria-label={debugEnabled ? "Hide debug overlay" : "Show debug overlay"}
+          >
+            {debugEnabled ? "Hide debug" : "Show debug"}
+          </button>
+        )}
 
         {/* Category nodes (initial state) */}
         <CategoryNodes visible={showCategories} scrollProgress={scrollValue} />
@@ -155,3 +195,4 @@ const Hero3D = () => {
 };
 
 export default Hero3D;
+
