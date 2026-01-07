@@ -42,25 +42,36 @@ const menuItems = [
 ];
 
 const CategoryNodes = ({ visible, scrollProgress }: CategoryNodesProps) => {
-  // Menu visible in first section (0 - 0.20)
-  const sectionProgress = Math.min(1, scrollProgress / 0.20);
-  const menuOpacity = visible ? Math.max(0, 1 - sectionProgress * 1.5) : 0;
+  // Menu visible in first section (0 - 0.25), with smooth fade
+  // Categories expand outward as scroll progresses, then fade out
+  const sectionEnd = 0.25;
+  const expandPhase = Math.min(1, scrollProgress / 0.15); // Expand during 0-0.15
+  const fadePhase = scrollProgress > 0.15 ? Math.min(1, (scrollProgress - 0.15) / 0.10) : 0; // Fade during 0.15-0.25
+  const menuOpacity = visible ? Math.max(0, 1 - fadePhase) : 0;
+  
+  // Expansion multiplier - categories spread out as user scrolls
+  const expansionMultiplier = 1 + expandPhase * 0.3;
 
   // Mobile-optimized positions - vertical stack on mobile, quad on desktop
   const getPosition = (index: number, isMobile: boolean) => {
     if (isMobile) {
-      // Vertical list for mobile
-      const yOffset = (index - 1.5) * 22;
+      // Vertical list for mobile - expand spacing as scroll progresses
+      const baseSpacing = 20;
+      const expandedSpacing = baseSpacing * expansionMultiplier;
+      const yOffset = (index - 1.5) * expandedSpacing;
       return { x: 0, y: yOffset };
     }
-    // Quad layout for desktop
-    const positions = [
-      { x: -18, y: -12 },
-      { x: 18, y: -12 },
-      { x: -18, y: 12 },
-      { x: 18, y: 12 },
+    // Quad layout for desktop - expand outward
+    const basePositions = [
+      { x: -15, y: -10 },
+      { x: 15, y: -10 },
+      { x: -15, y: 10 },
+      { x: 15, y: 10 },
     ];
-    return positions[index];
+    return { 
+      x: basePositions[index].x * expansionMultiplier, 
+      y: basePositions[index].y * expansionMultiplier 
+    };
   };
 
   return (
@@ -141,26 +152,17 @@ const CategoryNodes = ({ visible, scrollProgress }: CategoryNodesProps) => {
                 left: "50%",
                 top: "50%",
               }}
-              initial={{ opacity: 0, scale: 0.5 }}
+              initial={{ opacity: 0, scale: 0.5, x: "-50%", y: "-50%" }}
               animate={{
                 opacity: itemOpacity,
                 scale: scale,
-                x: `calc(-50% + ${mobilePos.x}vw)`,
-                y: `calc(-50% + ${mobilePos.y}vh)`,
+                x: `calc(-50% + ${desktopPos.x}vw)`,
+                y: `calc(-50% + ${desktopPos.y}vh)`,
               }}
               whileHover={itemOpacity > 0.3 ? { scale: scale * 1.05, borderColor: item.glowColor } : {}}
-              transition={{ duration: 0.3, ease: "easeOut" }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
               aria-label={`${item.label} - ${item.subtitle}`}
               tabIndex={itemOpacity > 0.3 ? 0 : -1}
-              // Use CSS media query for positioning
-              {...(typeof window !== 'undefined' && window.innerWidth >= 768 ? {
-                animate: {
-                  opacity: itemOpacity,
-                  scale: scale,
-                  x: `calc(-50% + ${desktopPos.x}vw)`,
-                  y: `calc(-50% + ${desktopPos.y}vh)`,
-                }
-              } : {})}
             >
               <div className="flex items-center gap-3">
                 <div className={`w-10 h-10 md:w-12 md:h-12 rounded-lg bg-gradient-to-br ${item.color} flex items-center justify-center flex-shrink-0`}>
