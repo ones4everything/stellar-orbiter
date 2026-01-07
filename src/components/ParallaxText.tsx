@@ -5,38 +5,43 @@ interface ParallaxTextProps {
 }
 
 const phrases = [
-  { text: "Immersive commerce hardware", startY: 0.1, endY: 0.4, x: -200 },
-  { text: "AI-driven shopping", startY: 0.25, endY: 0.6, x: 250 },
-  { text: "Classical meets quantum", startY: 0.4, endY: 0.75, x: -150 },
-  { text: "Future is now", startY: 0.55, endY: 0.9, x: 200 },
+  { text: "Browse Categories", startY: 0, endY: 0.18, x: -120 },
+  { text: "Best Selling Products", startY: 0.18, endY: 0.40, x: 150 },
+  { text: "Seasonal Collection", startY: 0.40, endY: 0.65, x: -100 },
+  { text: "Featured Collection", startY: 0.65, endY: 0.95, x: 120 },
 ];
 
 const ParallaxText = ({ scrollProgress }: ParallaxTextProps) => {
   return (
     <div className="absolute inset-0 pointer-events-none overflow-hidden">
       {phrases.map((phrase, index) => {
-        // Calculate opacity based on scroll position
         const opacity = useTransform(
           scrollProgress,
-          [phrase.startY - 0.1, phrase.startY, phrase.endY, phrase.endY + 0.1],
-          [0, 1, 1, 0]
+          [phrase.startY, phrase.startY + 0.05, phrase.endY - 0.05, phrase.endY],
+          [0, 0.6, 0.6, 0]
         );
 
-        // Parallax X movement
         const x = useTransform(
           scrollProgress,
           [phrase.startY, phrase.endY],
-          [phrase.x, phrase.x * -1]
+          [phrase.x, phrase.x * -0.5]
+        );
+
+        const y = useTransform(
+          scrollProgress,
+          [phrase.startY, phrase.endY],
+          [0, -30]
         );
 
         return (
           <motion.p
             key={index}
-            className="absolute left-1/2 parallax-text text-lg md:text-xl lg:text-2xl whitespace-nowrap"
+            className="absolute left-1/2 parallax-text text-sm md:text-lg lg:text-xl whitespace-nowrap hidden md:block"
             style={{
               opacity,
               x,
-              top: `${20 + index * 18}%`,
+              y,
+              top: `${35 + (index % 2) * 30}%`,
             }}
           >
             {phrase.text}
