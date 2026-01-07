@@ -42,11 +42,10 @@ const menuItems = [
 ];
 
 const CategoryNodes = ({ visible, scrollProgress }: CategoryNodesProps) => {
-  // Menu visible in first section (0 - 0.25), with smooth fade
+  // Menu visible in first section (0 - 0.28), overlapping with Best Selling
   // Categories expand outward as scroll progresses, then fade out
-  const sectionEnd = 0.25;
   const expandPhase = Math.min(1, scrollProgress / 0.15); // Expand during 0-0.15
-  const fadePhase = scrollProgress > 0.15 ? Math.min(1, (scrollProgress - 0.15) / 0.10) : 0; // Fade during 0.15-0.25
+  const fadePhase = scrollProgress > 0.15 ? Math.min(1, (scrollProgress - 0.15) / 0.13) : 0; // Fade during 0.15-0.28
   const menuOpacity = visible ? Math.max(0, 1 - fadePhase) : 0;
   
   // Expansion multiplier - categories spread out as user scrolls

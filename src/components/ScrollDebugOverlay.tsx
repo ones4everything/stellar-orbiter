@@ -7,27 +7,41 @@ interface ScrollDebugOverlayProps {
 const ScrollDebugOverlay = ({ scrollProgress }: ScrollDebugOverlayProps) => {
   const percentage = Math.round(scrollProgress * 100);
   
-  // Determine current section
+  // Determine current section - using overlapping ranges
   const getCurrentSection = () => {
-    if (scrollProgress < 0.25) return { name: "Menu Categories", range: "0% - 25%" };
-    if (scrollProgress < 0.50) return { name: "Best Selling", range: "25% - 50%" };
-    if (scrollProgress < 0.75) return { name: "Seasonal Collection", range: "50% - 75%" };
-    return { name: "Featured Collection", range: "75% - 100%" };
+    if (scrollProgress < 0.22) return { name: "Menu Categories", range: "0% - 28%" };
+    if (scrollProgress < 0.50) return { name: "Best Selling", range: "18% - 55%" };
+    if (scrollProgress < 0.75) return { name: "Seasonal Collection", range: "45% - 80%" };
+    return { name: "Featured Collection", range: "70% - 100%" };
   };
 
-  // Get active effects
+  // Get active effects - updated for overlapping transitions
   const getActiveEffects = () => {
     const effects: string[] = [];
     
-    if (scrollProgress < 0.15) effects.push("Categories expanding outward");
-    if (scrollProgress >= 0.15 && scrollProgress < 0.25) effects.push("Categories fading out");
-    if (scrollProgress >= 0.25 && scrollProgress < 0.50) effects.push("Best Selling products visible");
-    if (scrollProgress >= 0.50 && scrollProgress < 0.625) effects.push("🌸 Cherry blossoms (Spring)");
-    if (scrollProgress >= 0.625 && scrollProgress < 0.75) effects.push("☀️ Sun sparkles (Summer)");
-    if (scrollProgress >= 0.75 && scrollProgress < 0.875) effects.push("🍂 Falling leaves (Autumn)");
-    if (scrollProgress >= 0.875) effects.push("❄️ Snowflakes (Winter)");
-    if (scrollProgress >= 0.50 && scrollProgress < 0.75) effects.push("Seasonal products visible");
-    if (scrollProgress >= 0.75) effects.push("Featured products visible");
+    // Menu effects
+    if (scrollProgress < 0.15) effects.push("📂 Categories expanding");
+    if (scrollProgress >= 0.15 && scrollProgress < 0.28) effects.push("📂 Categories fading out");
+    
+    // Best Selling effects (overlap with Menu & Seasonal)
+    if (scrollProgress >= 0.18 && scrollProgress < 0.28) effects.push("🔥 Best Selling fading in");
+    if (scrollProgress >= 0.28 && scrollProgress < 0.45) effects.push("🔥 Best Selling visible");
+    if (scrollProgress >= 0.45 && scrollProgress < 0.55) effects.push("🔥 Best Selling fading out");
+    
+    // Seasonal effects (overlap with Best Selling & Featured)
+    if (scrollProgress >= 0.45 && scrollProgress < 0.55) effects.push("🌿 Seasonal fading in");
+    if (scrollProgress >= 0.55 && scrollProgress < 0.70) effects.push("🌿 Seasonal visible");
+    if (scrollProgress >= 0.70 && scrollProgress < 0.80) effects.push("🌿 Seasonal fading out");
+    
+    // Seasonal particles
+    if (scrollProgress >= 0.50 && scrollProgress < 0.625) effects.push("🌸 Spring particles");
+    if (scrollProgress >= 0.625 && scrollProgress < 0.75) effects.push("☀️ Summer particles");
+    if (scrollProgress >= 0.75 && scrollProgress < 0.875) effects.push("🍂 Autumn particles");
+    if (scrollProgress >= 0.875) effects.push("❄️ Winter particles");
+    
+    // Featured effects (overlap with Seasonal)
+    if (scrollProgress >= 0.70 && scrollProgress < 0.80) effects.push("👑 Featured fading in");
+    if (scrollProgress >= 0.80) effects.push("👑 Featured visible");
     
     return effects;
   };
@@ -35,11 +49,12 @@ const ScrollDebugOverlay = ({ scrollProgress }: ScrollDebugOverlayProps) => {
   const currentSection = getCurrentSection();
   const activeEffects = getActiveEffects();
 
+  // Updated sections to show overlapping ranges
   const sections = [
-    { name: "Menu", start: 0, end: 0.25, color: "bg-primary" },
-    { name: "Best Selling", start: 0.25, end: 0.50, color: "bg-accent" },
-    { name: "Seasonal", start: 0.50, end: 0.75, color: "bg-green-500" },
-    { name: "Featured", start: 0.75, end: 1, color: "bg-purple-500" },
+    { name: "Menu", start: 0, end: 0.28, color: "bg-primary" },
+    { name: "Best Selling", start: 0.18, end: 0.55, color: "bg-accent" },
+    { name: "Seasonal", start: 0.45, end: 0.80, color: "bg-green-500" },
+    { name: "Featured", start: 0.70, end: 1, color: "bg-purple-500" },
   ];
 
   return (

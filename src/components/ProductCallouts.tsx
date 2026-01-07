@@ -233,17 +233,17 @@ const ProductCallouts = ({ visible, scrollProgress }: ProductCalloutsProps) => {
     setTimeout(() => setAddedId(null), 1500);
   };
 
-  // Section visibility calculations - clean 4-section transitions
-  // Section 1: Menu (0 - 0.25)
-  // Section 2: Best Selling (0.25 - 0.50)
-  // Section 3: Seasonal (0.50 - 0.75)
-  // Section 4: Featured (0.75 - 1.0)
+  // Section visibility calculations - OVERLAPPING transitions for smooth crossfades
+  // Section 1: Menu (0 - 0.28) - overlaps with Best Selling
+  // Section 2: Best Selling (0.18 - 0.55) - overlaps with Menu & Seasonal  
+  // Section 3: Seasonal (0.45 - 0.80) - overlaps with Best Selling & Featured
+  // Section 4: Featured (0.70 - 1.0) - overlaps with Seasonal
   
   const getBestSellingOpacity = () => {
-    const fadeIn = 0.22;
+    const fadeIn = 0.18;   // Start fading in while Menu still visible
     const peakStart = 0.28;
     const peakEnd = 0.45;
-    const fadeOut = 0.52;
+    const fadeOut = 0.55;  // Fade out as Seasonal fades in
     
     if (scrollProgress < fadeIn) return 0;
     if (scrollProgress < peakStart) return (scrollProgress - fadeIn) / (peakStart - fadeIn);
@@ -253,10 +253,10 @@ const ProductCallouts = ({ visible, scrollProgress }: ProductCalloutsProps) => {
   };
 
   const getSeasonalOpacity = () => {
-    const fadeIn = 0.47;
-    const peakStart = 0.53;
+    const fadeIn = 0.45;   // Start while Best Selling still visible
+    const peakStart = 0.55;
     const peakEnd = 0.70;
-    const fadeOut = 0.77;
+    const fadeOut = 0.80;  // Fade out as Featured fades in
     
     if (scrollProgress < fadeIn) return 0;
     if (scrollProgress < peakStart) return (scrollProgress - fadeIn) / (peakStart - fadeIn);
@@ -266,8 +266,8 @@ const ProductCallouts = ({ visible, scrollProgress }: ProductCalloutsProps) => {
   };
 
   const getFeaturedOpacity = () => {
-    const fadeIn = 0.72;
-    const peakStart = 0.78;
+    const fadeIn = 0.70;   // Start while Seasonal still visible
+    const peakStart = 0.80;
     
     if (scrollProgress < fadeIn) return 0;
     if (scrollProgress < peakStart) return (scrollProgress - fadeIn) / (peakStart - fadeIn);
@@ -275,9 +275,9 @@ const ProductCallouts = ({ visible, scrollProgress }: ProductCalloutsProps) => {
   };
 
   const getSectionTitle = () => {
-    if (scrollProgress >= 0.72) return { title: "Featured Collection", icon: Crown, color: "#d946ef", section: 4 };
-    if (scrollProgress >= 0.47) return { title: "Seasonal Collection", icon: Star, color: "#f97316", section: 3 };
-    if (scrollProgress >= 0.22) return { title: "Best Selling", icon: TrendingUp, color: "#f43f5e", section: 2 };
+    if (scrollProgress >= 0.70) return { title: "Featured Collection", icon: Crown, color: "#d946ef", section: 4 };
+    if (scrollProgress >= 0.45) return { title: "Seasonal Collection", icon: Star, color: "#f97316", section: 3 };
+    if (scrollProgress >= 0.18) return { title: "Best Selling", icon: TrendingUp, color: "#f43f5e", section: 2 };
     return null;
   };
 
