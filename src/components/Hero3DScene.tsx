@@ -1,6 +1,6 @@
 import { Canvas } from "@react-three/fiber";
 import { Stars, Environment } from "@react-three/drei";
-import { Suspense, useState } from "react";
+import { Suspense } from "react";
 import PlanetCore from "./PlanetCore";
 import OrbitRings from "./OrbitRings";
 
@@ -9,14 +9,8 @@ interface Hero3DSceneProps {
 }
 
 const Hero3DScene = ({ scrollProgress }: Hero3DSceneProps) => {
-  const [isHovered, setIsHovered] = useState(false);
-
   return (
-    <div
-      className="w-full h-full"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
+    <div className="w-full h-full">
       <Canvas
         camera={{ position: [0, 0, 8], fov: 45 }}
         dpr={[1, 2]}
@@ -61,7 +55,7 @@ const Hero3DScene = ({ scrollProgress }: Hero3DSceneProps) => {
 
         {/* Main planet */}
         <Suspense fallback={null}>
-          <PlanetCore scrollProgress={scrollProgress} isHovered={isHovered} />
+          <PlanetCore scrollProgress={scrollProgress} />
         </Suspense>
 
         {/* Orbit rings */}

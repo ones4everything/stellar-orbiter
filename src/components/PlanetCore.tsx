@@ -5,7 +5,6 @@ import * as THREE from "three";
 
 interface PlanetCoreProps {
   scrollProgress: number;
-  isHovered: boolean;
 }
 
 // Wireframe fallback while video loads
@@ -32,11 +31,10 @@ const WireframeSphere = () => {
 };
 
 // Video-textured planet
-const VideoPlanet = ({ scrollProgress, isHovered }: PlanetCoreProps) => {
+const VideoPlanet = ({ scrollProgress }: PlanetCoreProps) => {
   const meshRef = useRef<THREE.Mesh>(null);
-  const targetRotationY = useRef(0);
   const currentRotationY = useRef(0);
-  const hoverSpeed = useRef(0);
+  const currentTilt = useRef(0);
 
   // Detect reduced motion preference
   const prefersReducedMotion = useMemo(() => {
@@ -72,32 +70,30 @@ const VideoPlanet = ({ scrollProgress, isHovered }: PlanetCoreProps) => {
 
   const segments = isMobile ? 32 : 64;
 
-  useFrame((_, delta) => {
+  useFrame(() => {
     if (!meshRef.current || prefersReducedMotion) return;
 
-    // Calculate target rotation based on scroll with smoother easing
-    targetRotationY.current = scrollProgress * Math.PI * 2;
-
-    // Smooth hover effect transition
-    const hoverTarget = isHovered ? 0.5 : 0;
-    hoverSpeed.current = THREE.MathUtils.lerp(hoverSpeed.current, hoverTarget, 0.03);
-
-    // Very smooth interpolation to target rotation
+    // Target rotation directly from scroll - no hover effects
+    const targetRotationY = scrollProgress * Math.PI * 2;
+    
+    // Smooth interpolation for clean transitions
     currentRotationY.current = THREE.MathUtils.lerp(
       currentRotationY.current,
-      targetRotationY.current,
-      0.06
+      targetRotationY,
+      0.1
     );
 
-    meshRef.current.rotation.y = currentRotationY.current + hoverSpeed.current * delta * 10;
+    // Apply rotation - static when scroll stops
+    meshRef.current.rotation.y = currentRotationY.current;
     
-    // Smoother tilt based on scroll with gentler oscillation
-    const tiltAmount = Math.sin(scrollProgress * Math.PI) * 0.15;
-    meshRef.current.rotation.x = THREE.MathUtils.lerp(
-      meshRef.current.rotation.x,
-      tiltAmount,
-      0.04
+    // Gentle tilt based on scroll progress
+    const targetTilt = Math.sin(scrollProgress * Math.PI) * 0.1;
+    currentTilt.current = THREE.MathUtils.lerp(
+      currentTilt.current,
+      targetTilt,
+      0.08
     );
+    meshRef.current.rotation.x = currentTilt.current;
   });
 
   return (
