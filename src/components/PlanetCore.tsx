@@ -44,7 +44,7 @@ const VideoPlanet = ({ scrollProgress, isHovered }: PlanetCoreProps) => {
     return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   }, []);
 
-  // Load video texture
+  // Load video texture with optimized settings
   const texture = useVideoTexture("/video/planet-seasons.mp4", {
     loop: true,
     muted: true,
@@ -53,12 +53,14 @@ const VideoPlanet = ({ scrollProgress, isHovered }: PlanetCoreProps) => {
     crossOrigin: "anonymous",
   });
 
-  // Configure texture
+  // Configure texture for smoother transitions
   useMemo(() => {
     if (texture) {
       texture.colorSpace = THREE.SRGBColorSpace;
       texture.minFilter = THREE.LinearFilter;
       texture.magFilter = THREE.LinearFilter;
+      texture.generateMipmaps = false;
+      texture.anisotropy = 1;
     }
   }, [texture]);
 
@@ -73,25 +75,29 @@ const VideoPlanet = ({ scrollProgress, isHovered }: PlanetCoreProps) => {
   useFrame((_, delta) => {
     if (!meshRef.current || prefersReducedMotion) return;
 
-    // Calculate target rotation based on scroll
+    // Calculate target rotation based on scroll with smoother easing
     targetRotationY.current = scrollProgress * Math.PI * 2;
 
-    // Add hover effect
-    if (isHovered) {
-      hoverSpeed.current = THREE.MathUtils.lerp(hoverSpeed.current, 0.5, 0.05);
-    } else {
-      hoverSpeed.current = THREE.MathUtils.lerp(hoverSpeed.current, 0, 0.05);
-    }
+    // Smooth hover effect transition
+    const hoverTarget = isHovered ? 0.5 : 0;
+    hoverSpeed.current = THREE.MathUtils.lerp(hoverSpeed.current, hoverTarget, 0.03);
 
-    // Smooth interpolation to target + hover rotation
+    // Very smooth interpolation to target rotation
     currentRotationY.current = THREE.MathUtils.lerp(
       currentRotationY.current,
       targetRotationY.current,
-      0.08
+      0.06
     );
 
     meshRef.current.rotation.y = currentRotationY.current + hoverSpeed.current * delta * 10;
-    meshRef.current.rotation.x = Math.sin(scrollProgress * Math.PI) * 0.2;
+    
+    // Smoother tilt based on scroll with gentler oscillation
+    const tiltAmount = Math.sin(scrollProgress * Math.PI) * 0.15;
+    meshRef.current.rotation.x = THREE.MathUtils.lerp(
+      meshRef.current.rotation.x,
+      tiltAmount,
+      0.04
+    );
   });
 
   return (
@@ -100,11 +106,12 @@ const VideoPlanet = ({ scrollProgress, isHovered }: PlanetCoreProps) => {
       <meshStandardMaterial
         map={texture}
         toneMapped={false}
-        roughness={0.35}
-        metalness={0.6}
+        roughness={0.3}
+        metalness={0.7}
         emissive="#ffffff"
-        emissiveIntensity={0.15}
+        emissiveIntensity={0.1}
         emissiveMap={texture}
+        envMapIntensity={0.5}
       />
     </mesh>
   );
