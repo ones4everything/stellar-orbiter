@@ -1,7 +1,11 @@
 import { Menu, Search, Mic, User, ShoppingCart } from "lucide-react";
 import { motion } from "framer-motion";
+import { useCart } from "@/hooks/useCart";
 
 const Header = () => {
+  const { openCart, getTotalItems } = useCart();
+  const itemCount = getTotalItems();
+
   return (
     <motion.header
       initial={{ y: -100, opacity: 0 }}
@@ -65,15 +69,22 @@ const Header = () => {
             <User className="w-5 h-5 text-foreground hover:text-primary transition-colors" />
           </button>
 
-          <button
+          <motion.button
+            onClick={openCart}
             className="p-2 rounded-lg hover:bg-secondary/50 transition-colors relative focus:outline-none focus:ring-2 focus:ring-primary/50"
-            aria-label="Shopping cart"
+            aria-label={`Shopping cart with ${itemCount} items`}
+            whileTap={{ scale: 0.95 }}
           >
             <ShoppingCart className="w-5 h-5 text-foreground hover:text-primary transition-colors" />
-            <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary text-primary-foreground text-xs rounded-full flex items-center justify-center font-medium">
-              0
-            </span>
-          </button>
+            <motion.span
+              key={itemCount}
+              initial={{ scale: 0.5 }}
+              animate={{ scale: 1 }}
+              className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground text-xs rounded-full flex items-center justify-center font-medium"
+            >
+              {itemCount}
+            </motion.span>
+          </motion.button>
         </div>
       </div>
     </motion.header>
