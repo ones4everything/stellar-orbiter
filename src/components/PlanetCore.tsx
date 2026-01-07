@@ -1,6 +1,5 @@
 import { useRef, useMemo, Suspense } from "react";
 import { useFrame } from "@react-three/fiber";
-import { useVideoTexture } from "@react-three/drei";
 import * as THREE from "three";
 
 interface PlanetCoreProps {
@@ -30,8 +29,8 @@ const WireframeSphere = () => {
   );
 };
 
-// Video-textured planet
-const VideoPlanet = ({ scrollProgress }: PlanetCoreProps) => {
+// Gradient planet fallback (no video dependency)
+const GradientPlanet = ({ scrollProgress }: PlanetCoreProps) => {
   const meshRef = useRef<THREE.Mesh>(null);
   const currentRotationY = useRef(0);
   const currentTilt = useRef(0);
@@ -42,26 +41,6 @@ const VideoPlanet = ({ scrollProgress }: PlanetCoreProps) => {
     return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   }, []);
 
-  // Load video texture with optimized settings
-  const texture = useVideoTexture("/video/planet-seasons.mp4", {
-    loop: true,
-    muted: true,
-    start: true,
-    playsInline: true,
-    crossOrigin: "anonymous",
-  });
-
-  // Configure texture for smoother transitions
-  useMemo(() => {
-    if (texture) {
-      texture.colorSpace = THREE.SRGBColorSpace;
-      texture.minFilter = THREE.LinearFilter;
-      texture.magFilter = THREE.LinearFilter;
-      texture.generateMipmaps = false;
-      texture.anisotropy = 1;
-    }
-  }, [texture]);
-
   // Detect mobile for performance
   const isMobile = useMemo(() => {
     if (typeof window === "undefined") return false;
@@ -70,28 +49,38 @@ const VideoPlanet = ({ scrollProgress }: PlanetCoreProps) => {
 
   const segments = isMobile ? 32 : 64;
 
+  // Create seasonal gradient colors
+  const getSeasonalColor = useMemo(() => {
+    if (scrollProgress < 0.25) return "#0ea5e9"; // Cyan for menu
+    if (scrollProgress < 0.50) return "#22d3ee"; // Best selling - bright cyan
+    if (scrollProgress < 0.625) return "#f472b6"; // Spring - pink
+    if (scrollProgress < 0.75) return "#fbbf24"; // Summer - gold
+    if (scrollProgress < 0.875) return "#f97316"; // Autumn - orange
+    return "#60a5fa"; // Winter - ice blue
+  }, [scrollProgress]);
+
   useFrame(() => {
     if (!meshRef.current || prefersReducedMotion) return;
 
-    // Target rotation directly from scroll - no hover effects
+    // Target rotation directly from scroll
     const targetRotationY = scrollProgress * Math.PI * 2;
     
     // Smooth interpolation for clean transitions
     currentRotationY.current = THREE.MathUtils.lerp(
       currentRotationY.current,
       targetRotationY,
-      0.1
+      0.06
     );
 
     // Apply rotation - static when scroll stops
     meshRef.current.rotation.y = currentRotationY.current;
     
     // Gentle tilt based on scroll progress
-    const targetTilt = Math.sin(scrollProgress * Math.PI) * 0.1;
+    const targetTilt = Math.sin(scrollProgress * Math.PI) * 0.15;
     currentTilt.current = THREE.MathUtils.lerp(
       currentTilt.current,
       targetTilt,
-      0.08
+      0.04
     );
     meshRef.current.rotation.x = currentTilt.current;
   });
@@ -100,14 +89,13 @@ const VideoPlanet = ({ scrollProgress }: PlanetCoreProps) => {
     <mesh ref={meshRef} castShadow receiveShadow>
       <sphereGeometry args={[2, segments, segments]} />
       <meshStandardMaterial
-        map={texture}
+        color={getSeasonalColor}
         toneMapped={false}
-        roughness={0.3}
-        metalness={0.7}
-        emissive="#ffffff"
-        emissiveIntensity={0.1}
-        emissiveMap={texture}
-        envMapIntensity={0.5}
+        roughness={0.2}
+        metalness={0.8}
+        emissive={getSeasonalColor}
+        emissiveIntensity={0.3}
+        envMapIntensity={1}
       />
     </mesh>
   );
@@ -116,7 +104,7 @@ const VideoPlanet = ({ scrollProgress }: PlanetCoreProps) => {
 const PlanetCore = (props: PlanetCoreProps) => {
   return (
     <Suspense fallback={<WireframeSphere />}>
-      <VideoPlanet {...props} />
+      <GradientPlanet {...props} />
     </Suspense>
   );
 };
