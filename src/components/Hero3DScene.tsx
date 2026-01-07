@@ -1,6 +1,6 @@
 import { Canvas } from "@react-three/fiber";
 import { Stars, Environment } from "@react-three/drei";
-import { EffectComposer, SSAO, Bloom, Vignette } from "@react-three/postprocessing";
+import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
 import { BlendFunction } from "postprocessing";
 import { Suspense } from "react";
 import PlanetCore from "./PlanetCore";
@@ -77,31 +77,18 @@ const Hero3DScene = ({ scrollProgress }: Hero3DSceneProps) => {
         {/* Environment for reflections */}
         <Environment preset="night" />
 
-        {/* Post-processing effects */}
-        <EffectComposer enableNormalPass>
-          {/* Ambient Occlusion for depth */}
-          <SSAO
-            blendFunction={BlendFunction.MULTIPLY}
-            samples={21}
-            rings={4}
-            worldDistanceThreshold={1.0}
-            worldDistanceFalloff={0.1}
-            worldProximityThreshold={0.5}
-            worldProximityFalloff={0.1}
-            luminanceInfluence={0.6}
-            radius={0.1}
-            intensity={20}
-          />
+        {/* Post-processing effects - simplified for compatibility */}
+        <EffectComposer>
           {/* Subtle bloom for neon glow */}
           <Bloom
-            intensity={0.5}
-            luminanceThreshold={0.8}
+            intensity={0.8}
+            luminanceThreshold={0.6}
             luminanceSmoothing={0.9}
           />
-          {/* Vignette for cinematic feel */}
+          {/* Vignette for cinematic feel and depth */}
           <Vignette
-            offset={0.3}
-            darkness={0.6}
+            offset={0.25}
+            darkness={0.7}
             blendFunction={BlendFunction.NORMAL}
           />
         </EffectComposer>
