@@ -42,17 +42,43 @@ const Hero3D = () => {
         className="sticky top-0 h-screen overflow-hidden"
         style={{ scale }}
       >
-        {/* Background gradient */}
-        <div className="absolute inset-0 bg-gradient-to-b from-background via-navy-dark to-background" />
+        {/* Seasonal background gradient */}
+        <div 
+          className="absolute inset-0 transition-colors duration-1000"
+          style={{
+            background: scrollValue < 0.50 
+              ? 'linear-gradient(to bottom, hsl(222, 47%, 3%), hsl(222, 60%, 8%), hsl(222, 47%, 3%))'
+              : scrollValue < 0.625 
+                ? 'linear-gradient(to bottom, hsl(350, 30%, 5%), hsl(330, 40%, 10%), hsl(350, 30%, 5%))' // Spring - pink tint
+                : scrollValue < 0.75 
+                  ? 'linear-gradient(to bottom, hsl(40, 30%, 5%), hsl(30, 50%, 8%), hsl(40, 30%, 5%))' // Summer - warm gold
+                  : scrollValue < 0.875 
+                    ? 'linear-gradient(to bottom, hsl(25, 40%, 5%), hsl(15, 50%, 8%), hsl(25, 40%, 5%))' // Autumn - orange/brown
+                    : 'linear-gradient(to bottom, hsl(210, 50%, 5%), hsl(220, 60%, 10%), hsl(210, 50%, 5%))' // Winter - cool blue
+          }}
+        />
         
-        {/* Radial glow behind planet */}
+        {/* Radial glow behind planet - seasonal color */}
         <motion.div
           className="absolute inset-0 flex items-center justify-center pointer-events-none"
           style={{
             opacity: useTransform(scrollYProgress, [0, 0.3], [0.3, 0.6]),
           }}
         >
-          <div className="w-[600px] h-[600px] rounded-full bg-gradient-radial from-primary/10 via-accent/5 to-transparent blur-3xl" />
+          <div 
+            className="w-[600px] h-[600px] rounded-full blur-3xl transition-colors duration-1000"
+            style={{
+              background: scrollValue < 0.50 
+                ? 'radial-gradient(circle, hsla(180, 100%, 50%, 0.1), hsla(300, 100%, 50%, 0.05), transparent)'
+                : scrollValue < 0.625 
+                  ? 'radial-gradient(circle, hsla(330, 80%, 70%, 0.15), hsla(350, 60%, 50%, 0.08), transparent)' // Spring
+                  : scrollValue < 0.75 
+                    ? 'radial-gradient(circle, hsla(45, 100%, 50%, 0.15), hsla(30, 80%, 40%, 0.08), transparent)' // Summer
+                    : scrollValue < 0.875 
+                      ? 'radial-gradient(circle, hsla(25, 90%, 50%, 0.15), hsla(15, 70%, 30%, 0.08), transparent)' // Autumn
+                      : 'radial-gradient(circle, hsla(200, 80%, 60%, 0.15), hsla(220, 70%, 40%, 0.08), transparent)' // Winter
+            }}
+          />
         </motion.div>
 
         {/* 3D Scene */}
