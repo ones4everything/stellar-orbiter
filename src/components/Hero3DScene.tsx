@@ -2,7 +2,7 @@ import { Canvas } from "@react-three/fiber";
 import { Stars, Environment } from "@react-three/drei";
 import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
 import { BlendFunction } from "postprocessing";
-import { Suspense } from "react";
+import { Suspense, useMemo, useState } from "react";
 import PlanetCore from "./PlanetCore";
 import OrbitRings from "./OrbitRings";
 
@@ -11,6 +11,13 @@ interface Hero3DSceneProps {
 }
 
 const Hero3DScene = ({ scrollProgress }: Hero3DSceneProps) => {
+  const [webglAvailable, setWebglAvailable] = useState(true);
+
+  const prefersReducedMotion = useMemo(() => {
+    if (typeof window === "undefined") return false;
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }, []);
+
   // Seasonal light colors based on scroll
   const getSeasonalAccent = () => {
     if (scrollProgress < 0.50) return { rim: "#00ffff", fill: "#ff00ff" }; // Default cyan/magenta
@@ -22,13 +29,33 @@ const Hero3DScene = ({ scrollProgress }: Hero3DSceneProps) => {
 
   const seasonalColors = getSeasonalAccent();
 
+  if (!webglAvailable) {
+    return (
+      <div className="w-full h-full flex items-center justify-center">
+        <div className="rounded-xl border border-border bg-background/70 backdrop-blur px-4 py-3 text-sm text-muted-foreground">
+          3D preview unavailable on this device/browser.
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full h-full">
       <Canvas
         camera={{ position: [0, 0, 8], fov: 45 }}
-        dpr={[1, 2]}
-        gl={{ antialias: true, alpha: true }}
+        dpr={1}
+        gl={{ antialias: false, alpha: true, powerPreference: "high-performance" }}
         style={{ background: "transparent" }}
+        onCreated={({ gl }) => {
+          const onContextLost = (e: Event) => {
+            // prevent default to stop browser from spamming logs
+            // and show our fallback UI instead
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (e as any).preventDefault?.();
+            setWebglAvailable(false);
+          };
+          gl.domElement.addEventListener("webglcontextlost", onContextLost, false);
+        }}
       >
         {/* Lighting */}
         <ambientLight intensity={0.4} />
@@ -59,7 +86,7 @@ const Hero3DScene = ({ scrollProgress }: Hero3DSceneProps) => {
         <Stars
           radius={100}
           depth={50}
-          count={3000}
+          count={1200}
           factor={4}
           saturation={0}
           fade
@@ -77,24 +104,27 @@ const Hero3DScene = ({ scrollProgress }: Hero3DSceneProps) => {
         {/* Environment for reflections */}
         <Environment preset="night" />
 
-        {/* Post-processing effects - simplified for compatibility */}
-        <EffectComposer>
-          {/* Subtle bloom for neon glow */}
-          <Bloom
-            intensity={0.8}
-            luminanceThreshold={0.6}
-            luminanceSmoothing={0.9}
-          />
-          {/* Vignette for cinematic feel and depth */}
-          <Vignette
-            offset={0.25}
-            darkness={0.7}
-            blendFunction={BlendFunction.NORMAL}
-          />
-        </EffectComposer>
+        {/* Post-processing effects - disable when reduced motion for stability */}
+        {!prefersReducedMotion && (
+          <EffectComposer>
+            {/* Subtle bloom for neon glow */}
+            <Bloom
+              intensity={0.6}
+              luminanceThreshold={0.65}
+              luminanceSmoothing={0.9}
+            />
+            {/* Vignette for cinematic feel and depth */}
+            <Vignette
+              offset={0.25}
+              darkness={0.7}
+              blendFunction={BlendFunction.NORMAL}
+            />
+          </EffectComposer>
+        )}
       </Canvas>
     </div>
   );
 };
 
 export default Hero3DScene;
+
