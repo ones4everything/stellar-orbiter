@@ -1,6 +1,6 @@
 import { useRef, useEffect, useMemo, useState, useCallback } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { Sparkles, TrendingUp, Leaf, Crown } from "lucide-react";
+import { Sparkles, TrendingUp, Leaf, Crown, ChevronsDown } from "lucide-react";
 import Hero3DScene from "./Hero3DScene";
 import CategoryNodes from "./CategoryNodes";
 import ProductCallouts from "./ProductCallouts";
@@ -11,11 +11,12 @@ import ScrollDebugOverlay from "./ScrollDebugOverlay";
 const DEBUG_STORAGE_KEY = "lovable:hero3d:debug-overlay";
 
 const CHAPTERS = [
-  { id: "menu", label: "Menu", progress: 0, icon: Sparkles, color: "#00ffff" },
-  { id: "best", label: "Best Selling", progress: 0.25, icon: TrendingUp, color: "#f43f5e" },
-  { id: "seasonal", label: "Seasonal", progress: 0.50, icon: Leaf, color: "#22c55e" },
-  { id: "featured", label: "Featured", progress: 0.75, icon: Crown, color: "#d946ef" },
-];
+  { id: "menu", label: "Menu", progress: 0, icon: Sparkles },
+  { id: "best", label: "Best Selling", progress: 0.25, icon: TrendingUp },
+  { id: "seasonal", label: "Seasonal", progress: 0.5, icon: Leaf },
+  { id: "featured", label: "Featured", progress: 0.75, icon: Crown },
+  { id: "end", label: "End", progress: 1, icon: ChevronsDown },
+] as const;
 
 const Hero3D = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -59,18 +60,23 @@ const Hero3D = () => {
 
   // Jump to a specific scroll chapter
   const jumpToChapter = useCallback((targetProgress: number) => {
-    if (!containerRef.current) return;
-    const containerHeight = containerRef.current.scrollHeight - window.innerHeight;
-    const targetScroll = containerRef.current.offsetTop + containerHeight * targetProgress;
-    window.scrollTo({ top: targetScroll, behavior: "smooth" });
+    const el = containerRef.current;
+    if (!el) return;
+
+    const top = el.getBoundingClientRect().top + window.scrollY;
+    const containerHeight = el.scrollHeight - window.innerHeight;
+    const targetScroll = top + containerHeight * targetProgress;
+
+    window.scrollTo({ top: Math.max(0, targetScroll), behavior: "smooth" });
   }, []);
 
   // Determine which chapter is active
   const activeChapterIndex = useMemo(() => {
     if (scrollValue < 0.25) return 0;
-    if (scrollValue < 0.50) return 1;
+    if (scrollValue < 0.5) return 1;
     if (scrollValue < 0.75) return 2;
-    return 3;
+    if (scrollValue < 0.999) return 3;
+    return 4;
   }, [scrollValue]);
 
   // Determine visibility states - 4 section transitions
@@ -222,6 +228,19 @@ const Hero3D = () => {
           {CHAPTERS.map((chapter, idx) => {
             const Icon = chapter.icon;
             const isActive = idx === activeChapterIndex;
+
+            // Accent colors using existing design tokens (HSL CSS variables)
+            const accent =
+              idx === 0
+                ? "hsl(var(--neon-cyan))"
+                : idx === 1
+                  ? "hsl(var(--accent))"
+                  : idx === 2
+                    ? "hsl(var(--neon-orange))"
+                    : idx === 3
+                      ? "hsl(var(--primary))"
+                      : "hsl(var(--muted-foreground))";
+
             return (
               <button
                 key={chapter.id}
@@ -239,16 +258,16 @@ const Hero3D = () => {
                 <motion.div
                   className="w-8 h-8 rounded-full flex items-center justify-center border transition-colors"
                   animate={{
-                    borderColor: isActive ? chapter.color : "hsl(var(--border))",
-                    backgroundColor: isActive ? `${chapter.color}20` : "hsl(var(--background) / 0.6)",
-                    boxShadow: isActive ? `0 0 10px ${chapter.color}40` : "none",
+                    borderColor: isActive ? accent : "hsl(var(--border))",
+                    backgroundColor: isActive ? "hsl(var(--foreground) / 0.04)" : "hsl(var(--background) / 0.6)",
+                    boxShadow: isActive ? `0 0 12px ${accent}` : "none",
                   }}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
                 >
                   <Icon
                     className="w-4 h-4 transition-colors"
-                    style={{ color: isActive ? chapter.color : "hsl(var(--muted-foreground))" }}
+                    style={{ color: isActive ? accent : "hsl(var(--muted-foreground))" }}
                   />
                 </motion.div>
               </button>
