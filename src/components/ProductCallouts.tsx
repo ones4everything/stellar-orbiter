@@ -182,7 +182,12 @@ const ProductCallouts = ({ visible, scrollProgress }: ProductCalloutsProps) => {
     };
   };
 
-  const renderProductCard = (product: any, opacity: number, position: { x: number; y: number }, isSeasonal = false) => {
+  const ProductCard = ({ product, opacity, position, isSeasonal = false }: {
+    product: any;
+    opacity: number;
+    position: { x: number; y: number };
+    isSeasonal?: boolean;
+  }) => {
     const Icon = product.icon;
     const SeasonIcon = product.seasonIcon;
     const isHovered = hoveredId === product.id;
@@ -192,7 +197,6 @@ const ProductCallouts = ({ visible, scrollProgress }: ProductCalloutsProps) => {
 
     return (
       <motion.div
-        key={product.id}
         className="absolute pointer-events-auto cursor-pointer"
         style={{
           left: `calc(50% + ${position.x}px)`,
@@ -348,7 +352,7 @@ const ProductCallouts = ({ visible, scrollProgress }: ProductCalloutsProps) => {
         const position = isMobile
           ? getMobilePosition(index, bestSellingProducts.length)
           : getDesktopPosition(index, bestSellingProducts.length, 180);
-        return renderProductCard(product, bestSellingOpacity, position);
+        return <ProductCard key={product.id} product={product} opacity={bestSellingOpacity} position={position} />;
       })}
 
       {/* Seasonal Products */}
@@ -356,7 +360,7 @@ const ProductCallouts = ({ visible, scrollProgress }: ProductCalloutsProps) => {
         const position = isMobile
           ? getMobilePosition(index, seasonalProducts.length)
           : getDesktopPosition(index, seasonalProducts.length, 200);
-        return renderProductCard(product, seasonalOpacity, position, true);
+        return <ProductCard key={product.id} product={product} opacity={seasonalOpacity} position={position} isSeasonal />;
       })}
 
       {/* Featured Products */}
@@ -364,7 +368,7 @@ const ProductCallouts = ({ visible, scrollProgress }: ProductCalloutsProps) => {
         const position = isMobile
           ? getMobilePosition(index, featuredProducts.length)
           : getDesktopPosition(index, featuredProducts.length, 190);
-        return renderProductCard(product, featuredOpacity, position);
+        return <ProductCard key={product.id} product={product} opacity={featuredOpacity} position={position} />;
       })}
 
       {/* Progress indicator */}

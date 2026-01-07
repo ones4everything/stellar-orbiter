@@ -4,6 +4,7 @@ import Hero3DScene from "./Hero3DScene";
 import CategoryNodes from "./CategoryNodes";
 import ProductCallouts from "./ProductCallouts";
 import ParallaxText from "./ParallaxText";
+import SeasonalParticles from "./SeasonalParticles";
 
 const Hero3D = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -57,6 +58,9 @@ const Hero3D = () => {
         <div className="absolute inset-0">
           <Hero3DScene scrollProgress={scrollValue} />
         </div>
+
+        {/* Seasonal Particles */}
+        <SeasonalParticles scrollProgress={scrollValue} />
 
         {/* Category nodes (initial state) */}
         <CategoryNodes visible={showCategories} scrollProgress={scrollValue} />
