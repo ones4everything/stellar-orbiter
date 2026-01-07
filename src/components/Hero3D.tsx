@@ -24,12 +24,12 @@ const Hero3D = () => {
   }, [scrollYProgress]);
 
   // Determine visibility states - 4 section transitions
-  // Section 1: Menu (0 - 0.20)
-  // Section 2: Best Selling (0.20 - 0.45)
-  // Section 3: Seasonal (0.45 - 0.70)
-  // Section 4: Featured (0.70 - 1.0)
-  const showCategories = scrollValue < 0.25;
-  const showProducts = scrollValue > 0.15;
+  // Section 1: Menu (0 - 0.25)
+  // Section 2: Best Selling (0.25 - 0.50)
+  // Section 3: Seasonal (0.50 - 0.75)
+  // Section 4: Featured (0.75 - 1.0)
+  const showCategories = scrollValue < 0.30;
+  const showProducts = scrollValue > 0.20;
 
   // Transform for sticky container scale
   const scale = useTransform(scrollYProgress, [0, 0.5, 1], [1, 1.05, 1]);
