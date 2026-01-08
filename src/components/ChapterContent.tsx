@@ -62,43 +62,28 @@ const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
     setTimeout(() => setAddedId(null), 1500);
   };
 
-  // Get individual card visibility based on scroll within its chapter
-  // Each chapter is 25% of scroll, and cards appear sequentially within that range
-  const getCardVisibility = (chapterIndex: number, cardIndex: number, totalCards: number) => {
+  // Get card visibility - show cards when chapter is active
+  const getCardVisibility = (chapterIndex: number) => {
     const chapterStart = chapterIndex * 0.25;
     const chapterEnd = (chapterIndex + 1) * 0.25;
-    const chapterProgress = (scrollProgress - chapterStart) / 0.25; // 0-1 within chapter
     
-    // Chapter not active
+    // Outside chapter range - hidden
     if (scrollProgress < chapterStart - 0.02 || scrollProgress > chapterEnd + 0.02) {
-      return { opacity: 0, scale: 0.8 };
+      return { opacity: 0, scale: 0.85 };
     }
     
-    // Calculate when this specific card should appear
-    const cardAppearStart = cardIndex / totalCards;
-    const cardAppearDuration = 0.25; // Each card takes 25% of chapter to fully appear
-    const cardLocalProgress = (chapterProgress - cardAppearStart) / cardAppearDuration;
+    const chapterProgress = (scrollProgress - chapterStart) / 0.25;
+    
+    // First chapter starts visible, others fade in
+    const fadeInProgress = chapterIndex === 0 ? 1 : Math.min(1, chapterProgress / 0.1);
     
     // Fade out at chapter end
-    const fadeOutStart = 0.85;
-    const fadeOutProgress = (chapterProgress - fadeOutStart) / (1 - fadeOutStart);
+    const fadeOutMultiplier = chapterProgress > 0.9 ? 1 - ((chapterProgress - 0.9) / 0.1) : 1;
     
-    let opacity = 0;
-    let scale = 0.8;
-    
-    if (chapterProgress >= cardAppearStart) {
-      opacity = Math.min(1, cardLocalProgress);
-      scale = 0.8 + Math.min(0.2, cardLocalProgress * 0.2);
-    }
-    
-    // Apply fade out at chapter end
-    if (chapterProgress > fadeOutStart) {
-      const fadeOut = 1 - Math.min(1, fadeOutProgress);
-      opacity *= fadeOut;
-      scale = 0.8 + 0.2 * fadeOut;
-    }
-    
-    return { opacity: Math.max(0, Math.min(1, opacity)), scale };
+    return { 
+      opacity: Math.max(0, Math.min(1, fadeInProgress * fadeOutMultiplier)), 
+      scale: 0.9 + 0.1 * fadeInProgress 
+    };
   };
 
   // Card positioning - orbit around center
@@ -169,7 +154,7 @@ const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
             const basePos = getCardPosition(idx, categories.length, 220);
             const pos = applyParallax(basePos, 0, 220);
             const Icon = cat.icon;
-            const { opacity, scale } = getCardVisibility(0, idx, categories.length);
+            const { opacity, scale } = getCardVisibility(0);
 
             if (opacity < 0.01) return null;
 
@@ -213,7 +198,7 @@ const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
             const basePos = getCardPosition(idx, seasonalProducts.length, 200);
             const pos = applyParallax(basePos, 1, 200);
             const Icon = product.icon;
-            const { opacity, scale } = getCardVisibility(1, idx, seasonalProducts.length);
+            const { opacity, scale } = getCardVisibility(1);
 
             if (opacity < 0.01) return null;
 
@@ -273,7 +258,7 @@ const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
             const basePos = getCardPosition(idx, bestSellers.length, 210);
             const pos = applyParallax(basePos, 2, 210);
             const Icon = product.icon;
-            const { opacity, scale } = getCardVisibility(2, idx, bestSellers.length);
+            const { opacity, scale } = getCardVisibility(2);
 
             if (opacity < 0.01) return null;
 
@@ -335,7 +320,7 @@ const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
             const basePos = getCardPosition(idx, saleItems.length, 200);
             const pos = applyParallax(basePos, 3, 200);
             const Icon = product.icon;
-            const { opacity, scale } = getCardVisibility(3, idx, saleItems.length);
+            const { opacity, scale } = getCardVisibility(3);
 
             if (opacity < 0.01) return null;
 
