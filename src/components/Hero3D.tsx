@@ -174,8 +174,8 @@ const Hero3D = () => {
           />
         </div>
 
-        {/* 3D Scene - Sphere stays centered */}
-        <div className="absolute inset-0">
+        {/* 3D Scene - Sphere stays centered (pointer-events-none so cards are clickable) */}
+        <div className="absolute inset-0 pointer-events-none">
           <Hero3DScene scrollProgress={scrollValue} />
         </div>
 
