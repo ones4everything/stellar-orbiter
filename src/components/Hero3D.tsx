@@ -114,19 +114,18 @@ const Hero3D = () => {
     };
   }, []);
 
-  // Jump to a specific chapter (matched to reference repo math)
+  // Jump to a specific chapter (using same logic as handleScroll for consistency)
   const jumpToChapter = useCallback((targetProgress: number) => {
     const el = containerRef.current;
     if (!el) return;
 
-    const containerHeight = el.offsetHeight;
-    const viewportHeight = window.innerHeight;
-    const scrollRange = containerHeight - viewportHeight;
+    // Use the same calculation as handleScroll for consistency
+    const startY = el.getBoundingClientRect().top + window.scrollY;
+    const height = el.getBoundingClientRect().height;
+    const endY = startY + height - window.innerHeight;
+    const range = Math.max(1, endY - startY);
 
-    // Get absolute position of container top
-    const containerTop = el.getBoundingClientRect().top + window.scrollY;
-    // Target scroll = container start + (progress * scrollable range)
-    const targetScroll = containerTop + scrollRange * targetProgress;
+    const targetScroll = startY + range * targetProgress;
 
     window.scrollTo({ top: Math.max(0, targetScroll), behavior: "smooth" });
   }, []);
