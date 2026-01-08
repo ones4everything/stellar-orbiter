@@ -85,20 +85,22 @@ const Hero3D = () => {
     }
   }, [debugEnabled, isDev]);
 
-  // Calculate scroll progress within the hero container
+  // Calculate scroll progress within the hero container (matched to reference repo)
   useEffect(() => {
     const handleScroll = () => {
       const el = containerRef.current;
       if (!el) return;
 
-      // Use page coordinates (reliable even with positioned parents)
-      const startY = el.getBoundingClientRect().top + window.scrollY;
-      const height = el.getBoundingClientRect().height;
-      const endY = startY + height - window.innerHeight;
-      const range = Math.max(1, endY - startY);
+      const rect = el.getBoundingClientRect();
+      const containerHeight = el.offsetHeight;
+      const viewportHeight = window.innerHeight;
 
-      const raw = (window.scrollY - startY) / range;
-      const progress = Math.max(0, Math.min(1, raw));
+      // scrollStart = how far we've scrolled into the container
+      const scrollStart = -rect.top;
+      // scrollRange = total scrollable distance within the container
+      const scrollRange = containerHeight - viewportHeight;
+
+      const progress = Math.max(0, Math.min(1, scrollStart / scrollRange));
       setScrollValue(progress);
     };
 
@@ -112,14 +114,19 @@ const Hero3D = () => {
     };
   }, []);
 
-  // Jump to a specific chapter
+  // Jump to a specific chapter (matched to reference repo math)
   const jumpToChapter = useCallback((targetProgress: number) => {
     const el = containerRef.current;
     if (!el) return;
 
-    const top = el.getBoundingClientRect().top + window.scrollY;
-    const scrollableHeight = el.scrollHeight - window.innerHeight;
-    const targetScroll = top + scrollableHeight * targetProgress;
+    const containerHeight = el.offsetHeight;
+    const viewportHeight = window.innerHeight;
+    const scrollRange = containerHeight - viewportHeight;
+
+    // Get absolute position of container top
+    const containerTop = el.getBoundingClientRect().top + window.scrollY;
+    // Target scroll = container start + (progress * scrollable range)
+    const targetScroll = containerTop + scrollRange * targetProgress;
 
     window.scrollTo({ top: Math.max(0, targetScroll), behavior: "smooth" });
   }, []);
