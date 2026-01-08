@@ -18,16 +18,54 @@ const Hero3DScene = ({ scrollProgress }: Hero3DSceneProps) => {
     return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   }, []);
 
-  // Seasonal light colors synced with 4 chapters
-  // 0-25% = Spring, 25-50% = Summer, 50-75% = Autumn, 75-100% = Winter
-  const getSeasonalAccent = () => {
-    if (scrollProgress < 0.25) return { rim: "#f0abfc", fill: "#d946ef" }; // Spring - pink/purple
-    if (scrollProgress < 0.50) return { rim: "#fde047", fill: "#f59e0b" }; // Summer - gold/yellow
-    if (scrollProgress < 0.75) return { rim: "#fb923c", fill: "#ea580c" }; // Autumn - orange
-    return { rim: "#7dd3fc", fill: "#0ea5e9" }; // Winter - ice blue
+  // Seasonal lighting: continuous interpolation for smooth transitions
+  // 0-25% = Spring, 25-50% = Summer, 50-75% = Fall, 75-100% = Winter
+  const getSeasonalLighting = () => {
+    // Spring: soft warm, subtle bloom
+    if (scrollProgress < 0.25) {
+      const blend = scrollProgress / 0.25;
+      return { 
+        rim: "#f0abfc", 
+        fill: "#d946ef", 
+        intensity: 1.3 + blend * 0.2,
+        fogColor: "transparent",
+        fogDensity: 0
+      };
+    }
+    // Summer: bright warm, high saturation, crisp
+    if (scrollProgress < 0.50) {
+      const blend = (scrollProgress - 0.25) / 0.25;
+      return { 
+        rim: "#fde047", 
+        fill: "#f59e0b", 
+        intensity: 1.5 + blend * 0.3,
+        fogColor: "transparent",
+        fogDensity: 0
+      };
+    }
+    // Fall: golden hour, warm orange/red, optional fog
+    if (scrollProgress < 0.75) {
+      const blend = (scrollProgress - 0.50) / 0.25;
+      return { 
+        rim: "#fb923c", 
+        fill: "#ea580c", 
+        intensity: 1.4 - blend * 0.2,
+        fogColor: "#fbbf2420",
+        fogDensity: blend * 0.3
+      };
+    }
+    // Winter: cool blue, soft fog
+    const blend = (scrollProgress - 0.75) / 0.25;
+    return { 
+      rim: "#7dd3fc", 
+      fill: "#0ea5e9", 
+      intensity: 1.2 - blend * 0.3,
+      fogColor: "#e0f2fe30",
+      fogDensity: 0.3 + blend * 0.2
+    };
   };
 
-  const seasonalColors = getSeasonalAccent();
+  const seasonalLighting = getSeasonalLighting();
 
   if (!webglAvailable) {
     return (
@@ -68,16 +106,16 @@ const Hero3DScene = ({ scrollProgress }: Hero3DSceneProps) => {
         {/* Seasonal rim light */}
         <spotLight
           position={[-5, 2, -3]}
-          intensity={1.5}
-          color={seasonalColors.rim}
+          intensity={seasonalLighting.intensity}
+          color={seasonalLighting.rim}
           angle={0.6}
           penumbra={1}
         />
         {/* Seasonal fill light */}
         <spotLight
           position={[5, -2, -3]}
-          intensity={1}
-          color={seasonalColors.fill}
+          intensity={seasonalLighting.intensity * 0.7}
+          color={seasonalLighting.fill}
           angle={0.6}
           penumbra={1}
         />

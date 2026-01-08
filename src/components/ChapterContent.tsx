@@ -1,26 +1,39 @@
 import { motion } from "framer-motion";
 import { 
-  Sun, Snowflake, 
+  Sun, Snowflake, Star,
   Brain, Atom, Glasses, Laptop,
   ShoppingCart, Check, Percent
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useCart } from "@/hooks/useCart";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { 
+  clamp, 
+  smoothstep, 
+  getSeasonIndex,
+  getOrbitAngle,
+} from "@/lib/orbital-system-spec";
 
 interface ChapterContentProps {
   scrollProgress: number;
 }
 
-// Chapter 1: Spring - Menu Categories
+/**
+ * ORBITAL SYSTEM: scroll-driven 360° rotation
+ * - scrollProgress 0→1 = orbitAngle 0→2π
+ * - Season stations at 25% intervals
+ * - Cards orbit around center with 3D flip based on angle
+ */
+
+// Chapter 1: Spring (0-25%) - CATEGORIES
 const categories = [
-  { id: "neural", label: "Neural Links", icon: Brain, color: "#e879f9", count: 24 },
-  { id: "quantum", label: "Quantum Cores", icon: Atom, color: "#a855f7", count: 18 },
-  { id: "holo", label: "Holo Displays", icon: Glasses, color: "#06b6d4", count: 32 },
-  { id: "cyber", label: "Cyber Decks", icon: Laptop, color: "#10b981", count: 15 },
+  { id: "men", label: "Men", icon: Brain, color: "#e879f9", count: 124 },
+  { id: "women", label: "Women", icon: Atom, color: "#a855f7", count: 186 },
+  { id: "kids", label: "Kids", icon: Glasses, color: "#06b6d4", count: 92 },
+  { id: "accessories", label: "Accessories", icon: Laptop, color: "#10b981", count: 215 },
 ];
 
-// Chapter 2: Summer - Seasonal Products
+// Chapter 2: Summer (25-50%) - SEASONAL PRODUCTS
 const seasonalProducts = [
   { id: "solar-core", name: "Solar Core X", price: "$4,999", icon: Atom, color: "#fbbf24" },
   { id: "beach-deck", name: "Beach Deck Pro", price: "$2,799", icon: Laptop, color: "#f59e0b" },
@@ -28,20 +41,20 @@ const seasonalProducts = [
   { id: "ray-link", name: "Ray Neural", price: "$3,299", icon: Brain, color: "#eab308" },
 ];
 
-// Chapter 3: Autumn - Best Selling
+// Chapter 3: Fall (50-75%) - BEST SELLING with badges/ratings
 const bestSellers = [
-  { id: "neural-pro", name: "Neural Link Pro", price: "$2,499", icon: Brain, badge: "🔥 #1", color: "#f97316" },
-  { id: "quantum-x", name: "Quantum Core X", price: "$4,999", icon: Atom, badge: "⭐ Top", color: "#ea580c" },
-  { id: "holo-7", name: "Holo Display 7", price: "$1,899", icon: Glasses, badge: "📈 Hot", color: "#fb923c" },
-  { id: "cyber-alpha", name: "Cyber Core Alpha", price: "$3,299", icon: Laptop, badge: "💎 Pop", color: "#f59e0b" },
+  { id: "neural-pro", name: "Neural Link Pro", price: "$2,499", icon: Brain, badge: "#1", color: "#f97316", rating: 5 },
+  { id: "quantum-x", name: "Quantum Core X", price: "$4,999", icon: Atom, badge: "#2", color: "#ea580c", rating: 4.8 },
+  { id: "holo-7", name: "Holo Display 7", price: "$1,899", icon: Glasses, badge: "#3", color: "#fb923c", rating: 4.7 },
+  { id: "cyber-alpha", name: "Cyber Core Alpha", price: "$3,299", icon: Laptop, badge: "#4", color: "#f59e0b", rating: 4.6 },
 ];
 
-// Chapter 4: Winter - Sale Items
-const saleItems = [
-  { id: "frost-deck", name: "Frost Deck", price: "$2,399", original: "$3,599", discount: "33%", icon: Laptop, color: "#38bdf8" },
-  { id: "cryo-core", name: "Cryo Core", price: "$4,999", original: "$6,999", discount: "28%", icon: Atom, color: "#0ea5e9" },
-  { id: "ice-lens", name: "Ice Lens Pro", price: "$1,299", original: "$1,899", discount: "32%", icon: Glasses, color: "#7dd3fc" },
-  { id: "snow-link", name: "Snow Neural", price: "$1,899", original: "$2,799", discount: "32%", icon: Brain, color: "#22d3ee" },
+// Chapter 4: Winter (75-100%) - FEATURED PRODUCTS with hero CTA
+const featuredProducts = [
+  { id: "frost-deck", name: "Frost Deck", price: "$2,399", original: "$3,599", discount: "33%", icon: Laptop, color: "#38bdf8", featured: true },
+  { id: "cryo-core", name: "Cryo Core", price: "$4,999", original: "$6,999", discount: "28%", icon: Atom, color: "#0ea5e9", featured: true },
+  { id: "ice-lens", name: "Ice Lens Pro", price: "$1,299", original: "$1,899", discount: "32%", icon: Glasses, color: "#7dd3fc", featured: false },
+  { id: "snow-link", name: "Snow Neural", price: "$1,899", original: "$2,799", discount: "32%", icon: Brain, color: "#22d3ee", featured: false },
 ];
 
 const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
@@ -417,7 +430,7 @@ const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
         </div>
       )}
 
-      {/* Autumn - Best Sellers */}
+      {/* Fall - BEST SELLING with badges and ratings */}
       {isChapterVisible(2) && (
         <div className="absolute inset-0 flex items-center justify-center" style={{ perspective: "1000px" }}>
           {/* Render connectors first */}
@@ -443,6 +456,10 @@ const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
 
             if (opacity < 0.01) return null;
 
+            // Render rating stars
+            const fullStars = Math.floor(product.rating);
+            const hasHalfStar = product.rating % 1 >= 0.5;
+
             return (
               <motion.div
                 key={product.id}
@@ -467,12 +484,14 @@ const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
                   className="glass-card rounded-xl p-4 w-[150px] md:w-[180px] border relative overflow-hidden"
                   style={{ borderColor: `${product.color}30` }}
                 >
+                  {/* Rank badge */}
                   <div 
-                    className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-medium"
-                    style={{ backgroundColor: `${product.color}20`, color: product.color }}
+                    className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold"
+                    style={{ backgroundColor: `${product.color}`, color: '#000' }}
                   >
                     {product.badge}
                   </div>
+                  
                   <div className="flex items-center gap-3 mt-4">
                     <div 
                       className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
@@ -485,6 +504,19 @@ const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
                       <p className="font-bold text-sm" style={{ color: product.color }}>{product.price}</p>
                     </div>
                   </div>
+                  
+                  {/* Rating stars */}
+                  <div className="flex items-center gap-1 mt-2">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`w-3 h-3 ${i < fullStars || (i === fullStars && hasHalfStar) ? 'fill-current' : ''}`}
+                        style={{ color: i < fullStars || (i === fullStars && hasHalfStar) ? product.color : 'hsl(var(--muted))' }}
+                      />
+                    ))}
+                    <span className="text-xs text-muted-foreground ml-1">{product.rating}</span>
+                  </div>
+                  
                   <button
                     onClick={() => handleAddToCart(product)}
                     className="w-full mt-3 py-1.5 rounded-md text-xs font-medium flex items-center justify-center gap-1 text-background"
@@ -500,29 +532,30 @@ const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
         </div>
       )}
 
-      {/* Winter - Sale Items */}
+      {/* Winter - FEATURED PRODUCTS with hero CTA */}
       {isChapterVisible(3) && (
         <div className="absolute inset-0 flex items-center justify-center" style={{ perspective: "1000px" }}>
           {/* Render connectors first */}
-          {saleItems.map((product, idx) => {
-            const pos = getOrbitalPosition(idx, saleItems.length, 200, 3);
+          {featuredProducts.map((product, idx) => {
+            const pos = getOrbitalPosition(idx, featuredProducts.length, 200, 3);
             const { opacity } = getCardVisibility(3);
             if (opacity < 0.01) return null;
             return <OrbitalConnector key={`connector-${product.id}`} x={pos.x} y={pos.y} color={product.color} opacity={opacity} />;
           })}
           
           {/* Render trails */}
-          {saleItems.map((product, idx) => {
-            const trails = getTrailPositions(idx, saleItems.length, 200, 3);
+          {featuredProducts.map((product, idx) => {
+            const trails = getTrailPositions(idx, featuredProducts.length, 200, 3);
             const { opacity } = getCardVisibility(3);
             if (opacity < 0.01) return null;
             return <OrbitalTrail key={`trail-${product.id}`} trails={trails} color={product.color} baseOpacity={opacity} />;
           })}
           
-          {saleItems.map((product, idx) => {
-            const pos = getOrbitalPosition(idx, saleItems.length, 200, 3);
+          {featuredProducts.map((product, idx) => {
+            const pos = getOrbitalPosition(idx, featuredProducts.length, 200, 3);
             const Icon = product.icon;
             const { opacity, scale } = getCardVisibility(3);
+            const isFeaturedHero = product.featured;
 
             if (opacity < 0.01) return null;
 
@@ -536,20 +569,25 @@ const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
                   opacity,
                   transform: `translate(-50%, -50%) rotateY(${pos.rotateY}deg)`,
                   transformStyle: "preserve-3d",
+                  zIndex: isFeaturedHero ? 10 : 1,
                 }}
-                animate={{ scale }}
+                animate={{ scale: isFeaturedHero ? scale * 1.15 : scale }}
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                whileHover={{ scale: scale * 1.05 }}
+                whileHover={{ scale: (isFeaturedHero ? scale * 1.15 : scale) * 1.05 }}
               >
-                {/* Card glow */}
+                {/* Card glow - enhanced for featured */}
                 <div 
-                  className="absolute inset-0 rounded-xl blur-xl opacity-40"
-                  style={{ background: `radial-gradient(circle, ${product.color}60, transparent 70%)` }}
+                  className="absolute inset-0 rounded-xl blur-xl"
+                  style={{ 
+                    background: `radial-gradient(circle, ${product.color}${isFeaturedHero ? '80' : '60'}, transparent 70%)`,
+                    opacity: isFeaturedHero ? 0.6 : 0.4,
+                  }}
                 />
                 <div 
-                  className="glass-card rounded-xl p-4 w-[150px] md:w-[180px] border relative overflow-hidden"
-                  style={{ borderColor: `${product.color}30` }}
+                  className={`glass-card rounded-xl p-4 border relative overflow-hidden ${isFeaturedHero ? 'w-[180px] md:w-[220px]' : 'w-[150px] md:w-[180px]'}`}
+                  style={{ borderColor: `${product.color}${isFeaturedHero ? '50' : '30'}` }}
                 >
+                  {/* Discount badge */}
                   <div 
                     className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1"
                     style={{ backgroundColor: "#ef444420", color: "#ef4444" }}
@@ -557,32 +595,41 @@ const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
                     <Percent className="w-3 h-3" />
                     {product.discount} OFF
                   </div>
-                  <div className="flex items-center gap-2 mb-2 mt-4">
+                  
+                  {/* Featured badge */}
+                  {isFeaturedHero && (
+                    <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-400">
+                      <Star className="w-3 h-3 fill-current" />
+                      Featured
+                    </div>
+                  )}
+                  
+                  <div className="flex items-center gap-2 mb-2 mt-6">
                     <Snowflake className="w-4 h-4" style={{ color: product.color }} />
-                    <span className="text-xs font-medium" style={{ color: product.color }}>Winter Sale</span>
+                    <span className="text-xs font-medium" style={{ color: product.color }}>Winter Collection</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <div 
-                      className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
+                      className={`rounded-lg flex items-center justify-center shrink-0 ${isFeaturedHero ? 'w-12 h-12' : 'w-10 h-10'}`}
                       style={{ background: `linear-gradient(135deg, ${product.color}30, ${product.color}10)` }}
                     >
-                      <Icon className="w-5 h-5" style={{ color: product.color }} />
+                      <Icon className={isFeaturedHero ? "w-6 h-6" : "w-5 h-5"} style={{ color: product.color }} />
                     </div>
                     <div>
-                      <h3 className="text-foreground font-semibold text-sm">{product.name}</h3>
+                      <h3 className={`text-foreground font-semibold ${isFeaturedHero ? 'text-base' : 'text-sm'}`}>{product.name}</h3>
                       <div className="flex items-center gap-2">
-                        <p className="font-bold text-sm" style={{ color: product.color }}>{product.price}</p>
+                        <p className={`font-bold ${isFeaturedHero ? 'text-base' : 'text-sm'}`} style={{ color: product.color }}>{product.price}</p>
                         <p className="text-muted-foreground text-xs line-through">{product.original}</p>
                       </div>
                     </div>
                   </div>
                   <button
                     onClick={() => handleAddToCart(product)}
-                    className="w-full mt-3 py-1.5 rounded-md text-xs font-medium flex items-center justify-center gap-1 text-background"
+                    className={`w-full mt-3 rounded-md font-medium flex items-center justify-center gap-1 text-background ${isFeaturedHero ? 'py-2 text-sm' : 'py-1.5 text-xs'}`}
                     style={{ backgroundColor: product.color }}
                   >
                     {addedId === product.id ? <Check className="w-3 h-3" /> : <ShoppingCart className="w-3 h-3" />}
-                    {addedId === product.id ? "Added!" : "Add to Cart"}
+                    {addedId === product.id ? "Added!" : isFeaturedHero ? "Shop Now" : "Add to Cart"}
                   </button>
                 </div>
               </motion.div>
