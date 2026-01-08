@@ -115,6 +115,44 @@ const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
     };
   };
 
+  const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
+
+  const getChapterProgress = (chapterIndex: number) => {
+    const chapterStart = chapterIndex * 0.25;
+    return clamp01((scrollProgress - chapterStart) / 0.25);
+  };
+
+  // Subtle scroll-driven parallax: cards farther from center move slightly less.
+  const applyParallax = (
+    basePos: { x: number; y: number },
+    chapterIndex: number,
+    radius: number
+  ) => {
+    const t = getChapterProgress(chapterIndex); // 0..1 within chapter
+    const shift = (t - 0.5) * 26; // px
+
+    const distNorm = isMobile
+      ? Math.min(1, Math.abs(basePos.y) / 180)
+      : Math.min(1, Math.hypot(basePos.x, basePos.y) / Math.max(1, radius));
+
+    const mult = 1 - distNorm * 0.45; // farther => smaller motion
+
+    if (isMobile) {
+      return {
+        x: basePos.x + shift * mult * 0.12,
+        y: basePos.y + shift * mult * (basePos.y / 180),
+      };
+    }
+
+    const nx = basePos.x / Math.max(1, radius);
+    const ny = basePos.y / Math.max(1, radius * 0.55);
+
+    return {
+      x: basePos.x + shift * mult * nx,
+      y: basePos.y + shift * mult * ny,
+    };
+  };
+
   // Check if chapter is in range
   const isChapterVisible = (chapterIndex: number) => {
     const start = chapterIndex * 0.25;
@@ -128,12 +166,13 @@ const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
       {isChapterVisible(0) && (
         <div className="absolute inset-0 flex items-center justify-center">
           {categories.map((cat, idx) => {
-            const pos = getCardPosition(idx, categories.length, 220);
+            const basePos = getCardPosition(idx, categories.length, 220);
+            const pos = applyParallax(basePos, 0, 220);
             const Icon = cat.icon;
             const { opacity, scale } = getCardVisibility(0, idx, categories.length);
-            
+
             if (opacity < 0.01) return null;
-            
+
             return (
               <motion.div
                 key={cat.id}
@@ -171,12 +210,13 @@ const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
       {isChapterVisible(1) && (
         <div className="absolute inset-0 flex items-center justify-center">
           {seasonalProducts.map((product, idx) => {
-            const pos = getCardPosition(idx, seasonalProducts.length, 200);
+            const basePos = getCardPosition(idx, seasonalProducts.length, 200);
+            const pos = applyParallax(basePos, 1, 200);
             const Icon = product.icon;
             const { opacity, scale } = getCardVisibility(1, idx, seasonalProducts.length);
-            
+
             if (opacity < 0.01) return null;
-            
+
             return (
               <motion.div
                 key={product.id}
@@ -230,12 +270,13 @@ const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
       {isChapterVisible(2) && (
         <div className="absolute inset-0 flex items-center justify-center">
           {bestSellers.map((product, idx) => {
-            const pos = getCardPosition(idx, bestSellers.length, 210);
+            const basePos = getCardPosition(idx, bestSellers.length, 210);
+            const pos = applyParallax(basePos, 2, 210);
             const Icon = product.icon;
             const { opacity, scale } = getCardVisibility(2, idx, bestSellers.length);
-            
+
             if (opacity < 0.01) return null;
-            
+
             return (
               <motion.div
                 key={product.id}
@@ -291,12 +332,13 @@ const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
       {isChapterVisible(3) && (
         <div className="absolute inset-0 flex items-center justify-center">
           {saleItems.map((product, idx) => {
-            const pos = getCardPosition(idx, saleItems.length, 200);
+            const basePos = getCardPosition(idx, saleItems.length, 200);
+            const pos = applyParallax(basePos, 3, 200);
             const Icon = product.icon;
             const { opacity, scale } = getCardVisibility(3, idx, saleItems.length);
-            
+
             if (opacity < 0.01) return null;
-            
+
             return (
               <motion.div
                 key={product.id}
