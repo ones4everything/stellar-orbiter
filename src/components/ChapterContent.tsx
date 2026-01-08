@@ -25,12 +25,14 @@ interface ChapterContentProps {
  * - Cards orbit around center with 3D flip based on angle
  */
 
-// Chapter 1: Spring (0-25%) - CATEGORIES
+// Chapter 1: Spring (0-25%) - CATEGORIES (6 items for orbit balance)
 const categories = [
   { id: "men", label: "Men's Fashion", icon: Shirt, color: "#e879f9", count: 248 },
   { id: "women", label: "Women's Style", icon: ShoppingBag, color: "#a855f7", count: 312 },
   { id: "footwear", label: "Footwear", icon: Footprints, color: "#06b6d4", count: 156 },
   { id: "accessories", label: "Accessories", icon: Watch, color: "#10b981", count: 189 },
+  { id: "kids", label: "Kids Collection", icon: Shirt, color: "#f472b6", count: 98 },
+  { id: "sports", label: "Sportswear", icon: ShoppingBag, color: "#22d3ee", count: 134 },
 ];
 
 // Chapter 2: Summer (25-50%) - SEASONAL PRODUCTS (6 items)
@@ -82,22 +84,35 @@ const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
   };
 
   // Get card visibility - show cards when chapter is active
+  // Improved crossfade: uses seasonBlend approach from spec (fade out 80-100%, fade in 0-20%)
   const getCardVisibility = (chapterIndex: number) => {
     const chapterStart = chapterIndex * 0.25;
-    const chapterEnd = (chapterIndex + 1) * 0.25;
+    const chapterEnd = chapterIndex === 3 ? 1.0 : (chapterIndex + 1) * 0.25;
     
-    if (scrollProgress < chapterStart - 0.02 || scrollProgress > chapterEnd + 0.02) {
+    // Completely outside this chapter's range
+    if (scrollProgress < chapterStart - 0.05 || scrollProgress > chapterEnd + 0.05) {
       return { opacity: 0, scale: 0.85 };
     }
     
-    const chapterProgress = (scrollProgress - chapterStart) / 0.25;
-    const fadeInProgress = chapterIndex === 0 ? 1 : Math.min(1, chapterProgress / 0.1);
-    const fadeOutMultiplier = chapterProgress > 0.9 ? 1 - ((chapterProgress - 0.9) / 0.1) : 1;
+    // Calculate progress within this chapter (0-1)
+    const chapterProgress = Math.max(0, Math.min(1, (scrollProgress - chapterStart) / 0.25));
     
-    return { 
-      opacity: Math.max(0, Math.min(1, fadeInProgress * fadeOutMultiplier)), 
-      scale: 0.9 + 0.1 * fadeInProgress 
-    };
+    // Fade-in at start of chapter (0% to 15%)
+    let fadeIn = 1;
+    if (chapterIndex > 0 && chapterProgress < 0.15) {
+      fadeIn = chapterProgress / 0.15;
+    }
+    
+    // Fade-out at end of chapter (85% to 100%) - but not for Winter (last chapter)
+    let fadeOut = 1;
+    if (chapterIndex < 3 && chapterProgress > 0.85) {
+      fadeOut = 1 - (chapterProgress - 0.85) / 0.15;
+    }
+    
+    const opacity = Math.max(0, Math.min(1, fadeIn * fadeOut));
+    const scale = 0.85 + 0.15 * Math.min(1, opacity);
+    
+    return { opacity, scale };
   };
 
   // ORBITAL ROTATION: Cards orbit around center following the sphere's rotation
@@ -184,11 +199,12 @@ const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
     return trails;
   };
 
-  // Check if chapter is in range - extended range for Winter to catch 100%
+  // Check if chapter is in range - extended visibility for smooth transitions
   const isChapterVisible = (chapterIndex: number) => {
     const start = chapterIndex * 0.25;
-    const end = chapterIndex === 3 ? 1.02 : (chapterIndex + 1) * 0.25;
-    return scrollProgress >= start - 0.02 && scrollProgress <= end + 0.02;
+    const end = chapterIndex === 3 ? 1.05 : (chapterIndex + 1) * 0.25;
+    // Extend visibility window for crossfade overlap
+    return scrollProgress >= start - 0.05 && scrollProgress <= end + 0.05;
   };
 
   // Trail component for glow effect
