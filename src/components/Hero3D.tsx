@@ -1,26 +1,35 @@
 import { useRef, useEffect, useMemo, useState, useCallback } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
-import { Sparkles, TrendingUp, Leaf, Crown, ChevronsDown } from "lucide-react";
+import { motion } from "framer-motion";
+import { Flower2, Sun, Leaf, Snowflake } from "lucide-react";
 import Hero3DScene from "./Hero3DScene";
 import CategoryNodes from "./CategoryNodes";
 import ProductCallouts from "./ProductCallouts";
-import ParallaxText from "./ParallaxText";
 import SeasonalParticles from "./SeasonalParticles";
 import ScrollDebugOverlay from "./ScrollDebugOverlay";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const DEBUG_STORAGE_KEY = "lovable:hero3d:debug-overlay";
 
+// 4 chapters with seasonal themes
 const CHAPTERS = [
-  { id: "menu", label: "Menu", progress: 0, icon: Sparkles },
-  { id: "best", label: "Best Selling", progress: 0.25, icon: TrendingUp },
-  { id: "seasonal", label: "Seasonal", progress: 0.5, icon: Leaf },
-  { id: "featured", label: "Featured", progress: 0.75, icon: Crown },
-  { id: "end", label: "End", progress: 1, icon: ChevronsDown },
+  { id: "spring", label: "Menu", season: "Spring", progress: 0, icon: Flower2, accent: "hsl(330, 80%, 65%)" },
+  { id: "summer", label: "Seasonal", season: "Summer", progress: 0.25, icon: Sun, accent: "hsl(45, 100%, 50%)" },
+  { id: "autumn", label: "Best Selling", season: "Autumn", progress: 0.5, icon: Leaf, accent: "hsl(25, 90%, 55%)" },
+  { id: "winter", label: "Sale", season: "Winter", progress: 0.75, icon: Snowflake, accent: "hsl(200, 80%, 70%)" },
 ] as const;
+
+// Seasonal background gradients inspired by reference images
+const SEASONAL_BACKGROUNDS = {
+  spring: "linear-gradient(180deg, hsl(260, 40%, 12%) 0%, hsl(330, 50%, 15%) 50%, hsl(260, 40%, 8%) 100%)",
+  summer: "linear-gradient(180deg, hsl(120, 40%, 10%) 0%, hsl(80, 60%, 18%) 50%, hsl(40, 50%, 10%) 100%)",
+  autumn: "linear-gradient(180deg, hsl(15, 60%, 10%) 0%, hsl(25, 70%, 18%) 50%, hsl(10, 50%, 8%) 100%)",
+  winter: "linear-gradient(180deg, hsl(220, 50%, 8%) 0%, hsl(210, 60%, 15%) 50%, hsl(220, 50%, 5%) 100%)",
+};
 
 const Hero3D = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scrollValue, setScrollValue] = useState(0);
+  const isMobile = useIsMobile();
 
   const isDev = import.meta.env.DEV;
   const defaultDebugEnabled = useMemo(() => {
@@ -45,100 +54,93 @@ const Hero3D = () => {
     }
   }, [debugEnabled, isDev]);
 
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end end"],
-  });
-
-  // Subscribe to scroll changes
+  // Calculate scroll progress within the hero container
   useEffect(() => {
-    const unsubscribe = scrollYProgress.on("change", (v) => {
-      setScrollValue(v);
-    });
-    return () => unsubscribe();
-  }, [scrollYProgress]);
+    const handleScroll = () => {
+      const el = containerRef.current;
+      if (!el) return;
 
-  // Jump to a specific scroll chapter
+      const rect = el.getBoundingClientRect();
+      const scrollableHeight = el.scrollHeight - window.innerHeight;
+      const scrolled = -rect.top;
+      const progress = Math.max(0, Math.min(1, scrolled / scrollableHeight));
+      setScrollValue(progress);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll(); // initial calculation
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Jump to a specific chapter
   const jumpToChapter = useCallback((targetProgress: number) => {
     const el = containerRef.current;
     if (!el) return;
 
     const top = el.getBoundingClientRect().top + window.scrollY;
-    const containerHeight = el.scrollHeight - window.innerHeight;
-    const targetScroll = top + containerHeight * targetProgress;
+    const scrollableHeight = el.scrollHeight - window.innerHeight;
+    const targetScroll = top + scrollableHeight * targetProgress;
 
     window.scrollTo({ top: Math.max(0, targetScroll), behavior: "smooth" });
   }, []);
 
-  // Determine which chapter is active
+  // Determine active chapter (0-3)
   const activeChapterIndex = useMemo(() => {
     if (scrollValue < 0.25) return 0;
     if (scrollValue < 0.5) return 1;
     if (scrollValue < 0.75) return 2;
-    if (scrollValue < 0.999) return 3;
-    return 4;
+    return 3;
   }, [scrollValue]);
 
-  // Determine visibility states - 4 section transitions
-  // Section 1: Menu (0 - 0.25)
-  // Section 2: Best Selling (0.25 - 0.50)
-  // Section 3: Seasonal (0.50 - 0.75)
-  // Section 4: Featured (0.75 - 1.0)
+  // Current seasonal background
+  const currentBackground = useMemo(() => {
+    if (scrollValue < 0.25) return SEASONAL_BACKGROUNDS.spring;
+    if (scrollValue < 0.5) return SEASONAL_BACKGROUNDS.summer;
+    if (scrollValue < 0.75) return SEASONAL_BACKGROUNDS.autumn;
+    return SEASONAL_BACKGROUNDS.winter;
+  }, [scrollValue]);
+
+  // Visibility states
   const showCategories = scrollValue < 0.30;
   const showProducts = scrollValue > 0.20;
 
-  // Transform for sticky container scale
-  const scale = useTransform(scrollYProgress, [0, 0.5, 1], [1, 1.05, 1]);
-
   return (
-    <div ref={containerRef} className="relative h-[450vh]">
-      {/* Sticky container */}
-      <motion.div
-        className="sticky top-0 h-screen overflow-hidden"
-        style={{ scale }}
-      >
-        {/* Seasonal background gradient */}
-        <div
-          className="absolute inset-0 transition-colors duration-1000"
-          style={{
-            background:
-              scrollValue < 0.50
-                ? "linear-gradient(to bottom, hsl(222, 47%, 3%), hsl(222, 60%, 8%), hsl(222, 47%, 3%))"
-                : scrollValue < 0.625
-                  ? "linear-gradient(to bottom, hsl(350, 30%, 5%), hsl(330, 40%, 10%), hsl(350, 30%, 5%))" // Spring - pink tint
-                  : scrollValue < 0.75
-                    ? "linear-gradient(to bottom, hsl(40, 30%, 5%), hsl(30, 50%, 8%), hsl(40, 30%, 5%))" // Summer - warm gold
-                    : scrollValue < 0.875
-                      ? "linear-gradient(to bottom, hsl(25, 40%, 5%), hsl(15, 50%, 8%), hsl(25, 40%, 5%))" // Autumn - orange/brown
-                      : "linear-gradient(to bottom, hsl(210, 50%, 5%), hsl(220, 60%, 10%), hsl(210, 50%, 5%))", // Winter - cool blue
-          }}
+    <div
+      ref={containerRef}
+      className="relative"
+      style={{
+        // 4 chapters × 100vh each
+        height: "400vh",
+        scrollSnapType: "y mandatory",
+      }}
+    >
+      {/* Sticky container - sphere stays fixed in center */}
+      <div className="sticky top-0 h-screen overflow-hidden">
+        {/* Seasonal background */}
+        <motion.div
+          className="absolute inset-0 transition-all duration-700"
+          style={{ background: currentBackground }}
         />
 
-        {/* Radial glow behind planet - seasonal color */}
-        <motion.div
-          className="absolute inset-0 flex items-center justify-center pointer-events-none"
-          style={{
-            opacity: useTransform(scrollYProgress, [0, 0.3], [0.3, 0.6]),
-          }}
-        >
-          <div
-            className="w-[600px] h-[600px] rounded-full blur-3xl transition-colors duration-1000"
-            style={{
+        {/* Radial glow behind planet */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <motion.div
+            className="w-[500px] h-[500px] md:w-[700px] md:h-[700px] rounded-full blur-3xl"
+            animate={{
               background:
-                scrollValue < 0.50
-                  ? "radial-gradient(circle, hsla(180, 100%, 50%, 0.1), hsla(300, 100%, 50%, 0.05), transparent)"
-                  : scrollValue < 0.625
-                    ? "radial-gradient(circle, hsla(330, 80%, 70%, 0.15), hsla(350, 60%, 50%, 0.08), transparent)" // Spring
-                    : scrollValue < 0.75
-                      ? "radial-gradient(circle, hsla(45, 100%, 50%, 0.15), hsla(30, 80%, 40%, 0.08), transparent)" // Summer
-                      : scrollValue < 0.875
-                        ? "radial-gradient(circle, hsla(25, 90%, 50%, 0.15), hsla(15, 70%, 30%, 0.08), transparent)" // Autumn
-                        : "radial-gradient(circle, hsla(200, 80%, 60%, 0.15), hsla(220, 70%, 40%, 0.08), transparent)", // Winter
+                activeChapterIndex === 0
+                  ? "radial-gradient(circle, hsla(330, 80%, 60%, 0.2), hsla(280, 60%, 40%, 0.1), transparent)"
+                  : activeChapterIndex === 1
+                    ? "radial-gradient(circle, hsla(50, 100%, 50%, 0.25), hsla(30, 80%, 40%, 0.12), transparent)"
+                    : activeChapterIndex === 2
+                      ? "radial-gradient(circle, hsla(25, 90%, 50%, 0.2), hsla(10, 70%, 30%, 0.1), transparent)"
+                      : "radial-gradient(circle, hsla(200, 80%, 60%, 0.2), hsla(220, 60%, 40%, 0.1), transparent)",
             }}
+            transition={{ duration: 0.8 }}
           />
-        </motion.div>
+        </div>
 
-        {/* 3D Scene */}
+        {/* 3D Scene - Sphere stays centered */}
         <div className="absolute inset-0">
           <Hero3DScene scrollProgress={scrollValue} />
         </div>
@@ -146,7 +148,7 @@ const Hero3D = () => {
         {/* Seasonal Particles */}
         <SeasonalParticles scrollProgress={scrollValue} />
 
-        {/* Debug Overlay (dev-only; hidden by default) */}
+        {/* Debug Overlay */}
         {debugEnabled && <ScrollDebugOverlay scrollProgress={scrollValue} />}
 
         {/* Debug toggle */}
@@ -162,50 +164,123 @@ const Hero3D = () => {
           </button>
         )}
 
-        {/* Category nodes (initial state) */}
+        {/* Category nodes */}
         <CategoryNodes visible={showCategories} scrollProgress={scrollValue} />
 
-        {/* Product callouts (appear on scroll) */}
+        {/* Product callouts */}
         <ProductCallouts visible={showProducts} scrollProgress={scrollValue} />
 
-        {/* Parallax text */}
-        <ParallaxText scrollProgress={scrollYProgress} />
-
-        {/* Hero headline */}
+        {/* Chapter title overlay */}
         <motion.div
-          className="absolute bottom-24 left-0 right-0 text-center pointer-events-none"
-          initial={{ opacity: 0, y: 50 }}
+          className="absolute top-20 md:top-24 left-0 right-0 text-center pointer-events-none z-20"
+          key={activeChapterIndex}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.8 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.5 }}
         >
-          <motion.h2
-            className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4"
-            style={{
-              opacity: useTransform(scrollYProgress, [0, 0.2], [1, 0]),
-              y: useTransform(scrollYProgress, [0, 0.2], [0, -50]),
-            }}
-          >
-            <span className="text-primary neon-text">Future</span> Technology
-          </motion.h2>
-          <motion.p
-            className="text-muted-foreground text-lg md:text-xl max-w-md mx-auto"
-            style={{
-              opacity: useTransform(scrollYProgress, [0, 0.15], [1, 0]),
-            }}
-          >
-            Explore the next generation of hardware innovation
-          </motion.p>
+          <span className="text-xs md:text-sm uppercase tracking-widest text-muted-foreground/70 mb-2 block">
+            {CHAPTERS[activeChapterIndex].season}
+          </span>
+          <h2 className="text-2xl md:text-4xl font-bold text-foreground">
+            {CHAPTERS[activeChapterIndex].label}
+          </h2>
         </motion.div>
 
-        {/* Scroll indicator */}
+        {/* Desktop chapter markers (right side) */}
+        <nav
+          className="hidden md:flex absolute right-4 lg:right-8 top-1/2 -translate-y-1/2 z-40 flex-col items-center gap-4 pointer-events-auto"
+          aria-label="Jump to section"
+        >
+          {CHAPTERS.map((chapter, idx) => {
+            const Icon = chapter.icon;
+            const isActive = idx === activeChapterIndex;
+
+            return (
+              <button
+                key={chapter.id}
+                type="button"
+                onClick={() => jumpToChapter(chapter.progress)}
+                aria-label={`Jump to ${chapter.label} (${chapter.season})`}
+                aria-current={isActive ? "step" : undefined}
+                className="group relative flex items-center"
+              >
+                {/* Tooltip */}
+                <span className="absolute right-full mr-3 whitespace-nowrap rounded-lg bg-background/95 border border-border px-3 py-1.5 text-sm font-medium text-foreground opacity-0 pointer-events-none transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 shadow-lg">
+                  <span className="block text-xs text-muted-foreground">{chapter.season}</span>
+                  {chapter.label}
+                </span>
+                {/* Marker */}
+                <motion.div
+                  className="w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors backdrop-blur-sm"
+                  animate={{
+                    borderColor: isActive ? chapter.accent : "hsl(var(--border))",
+                    backgroundColor: isActive ? `${chapter.accent.replace(")", " / 0.15)")}` : "hsl(var(--background) / 0.5)",
+                    boxShadow: isActive ? `0 0 20px ${chapter.accent.replace(")", " / 0.5)")}` : "none",
+                  }}
+                  whileHover={{ scale: 1.15 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <Icon
+                    className="w-5 h-5 transition-colors"
+                    style={{ color: isActive ? chapter.accent : "hsl(var(--muted-foreground))" }}
+                  />
+                </motion.div>
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* Mobile chapter markers (bottom horizontal) */}
+        <nav
+          className="md:hidden absolute bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 pointer-events-auto bg-background/60 backdrop-blur-md rounded-full px-4 py-2 border border-border/50"
+          aria-label="Jump to section"
+        >
+          {CHAPTERS.map((chapter, idx) => {
+            const Icon = chapter.icon;
+            const isActive = idx === activeChapterIndex;
+
+            return (
+              <button
+                key={chapter.id}
+                type="button"
+                onClick={() => jumpToChapter(chapter.progress)}
+                aria-label={`Jump to ${chapter.label} (${chapter.season})`}
+                aria-current={isActive ? "step" : undefined}
+                className="flex flex-col items-center gap-1"
+              >
+                <motion.div
+                  className="w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors"
+                  animate={{
+                    borderColor: isActive ? chapter.accent : "hsl(var(--border) / 0.5)",
+                    backgroundColor: isActive ? `${chapter.accent.replace(")", " / 0.2)")}` : "transparent",
+                    boxShadow: isActive ? `0 0 16px ${chapter.accent.replace(")", " / 0.6)")}` : "none",
+                  }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <Icon
+                    className="w-5 h-5"
+                    style={{ color: isActive ? chapter.accent : "hsl(var(--muted-foreground))" }}
+                  />
+                </motion.div>
+                {/* Label */}
+                <span
+                  className="text-[10px] font-medium transition-colors"
+                  style={{ color: isActive ? chapter.accent : "hsl(var(--muted-foreground))" }}
+                >
+                  {chapter.season}
+                </span>
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* Scroll indicator (only at start) */}
         <motion.div
-          className="absolute bottom-8 left-1/2 -translate-x-1/2"
+          className="absolute bottom-20 md:bottom-8 left-1/2 -translate-x-1/2"
           initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.5 }}
-          style={{
-            opacity: useTransform(scrollYProgress, [0, 0.1], [1, 0]),
-          }}
+          animate={{ opacity: scrollValue < 0.05 ? 1 : 0 }}
+          transition={{ duration: 0.3 }}
         >
           <motion.div
             className="w-6 h-10 rounded-full border-2 border-primary/50 flex items-start justify-center p-1"
@@ -219,62 +294,17 @@ const Hero3D = () => {
             />
           </motion.div>
         </motion.div>
+      </div>
 
-        {/* Chapter jump markers */}
-        <nav
-          className="absolute right-4 top-1/2 -translate-y-1/2 z-40 flex flex-col items-center gap-3 pointer-events-auto"
-          aria-label="Jump to section"
-        >
-          {CHAPTERS.map((chapter, idx) => {
-            const Icon = chapter.icon;
-            const isActive = idx === activeChapterIndex;
-
-            // Accent colors using existing design tokens (HSL CSS variables)
-            const accent =
-              idx === 0
-                ? "hsl(var(--neon-cyan))"
-                : idx === 1
-                  ? "hsl(var(--accent))"
-                  : idx === 2
-                    ? "hsl(var(--neon-orange))"
-                    : idx === 3
-                      ? "hsl(var(--primary))"
-                      : "hsl(var(--muted-foreground))";
-
-            return (
-              <button
-                key={chapter.id}
-                type="button"
-                onClick={() => jumpToChapter(chapter.progress)}
-                aria-label={`Jump to ${chapter.label}`}
-                aria-current={isActive ? "step" : undefined}
-                className="group relative flex items-center"
-              >
-                {/* Tooltip */}
-                <span className="absolute right-full mr-2 whitespace-nowrap rounded bg-background/90 border border-border px-2 py-1 text-xs text-foreground opacity-0 pointer-events-none transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
-                  {chapter.label}
-                </span>
-                {/* Marker */}
-                <motion.div
-                  className="w-8 h-8 rounded-full flex items-center justify-center border transition-colors"
-                  animate={{
-                    borderColor: isActive ? accent : "hsl(var(--border))",
-                    backgroundColor: isActive ? "hsl(var(--foreground) / 0.04)" : "hsl(var(--background) / 0.6)",
-                    boxShadow: isActive ? `0 0 12px ${accent}` : "none",
-                  }}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Icon
-                    className="w-4 h-4 transition-colors"
-                    style={{ color: isActive ? accent : "hsl(var(--muted-foreground))" }}
-                  />
-                </motion.div>
-              </button>
-            );
-          })}
-        </nav>
-      </motion.div>
+      {/* Scroll-snap chapter sections (invisible, just for snap points) */}
+      {CHAPTERS.map((chapter) => (
+        <div
+          key={chapter.id}
+          className="h-screen"
+          style={{ scrollSnapAlign: "start" }}
+          aria-hidden="true"
+        />
+      ))}
     </div>
   );
 };
