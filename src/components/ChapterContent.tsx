@@ -33,28 +33,34 @@ const categories = [
   { id: "accessories", label: "Accessories", icon: Watch, color: "#10b981", count: 189 },
 ];
 
-// Chapter 2: Summer (25-50%) - SEASONAL PRODUCTS
+// Chapter 2: Summer (25-50%) - SEASONAL PRODUCTS (6 items)
 const seasonalProducts = [
   { id: "linen-blazer", name: "Linen Summer Blazer", price: "$189", icon: Shirt, color: "#fbbf24" },
   { id: "beach-tote", name: "Canvas Beach Tote", price: "$79", icon: ShoppingBag, color: "#f59e0b" },
   { id: "sun-hat", name: "Wide Brim Sun Hat", price: "$49", icon: Watch, color: "#facc15" },
   { id: "espadrilles", name: "Classic Espadrilles", price: "$95", icon: Footprints, color: "#eab308" },
+  { id: "swim-shorts", name: "Tropical Swim Shorts", price: "$65", icon: Shirt, color: "#fcd34d" },
+  { id: "sandals", name: "Leather Slide Sandals", price: "$85", icon: Footprints, color: "#fbbf24" },
 ];
 
-// Chapter 3: Fall (50-75%) - BEST SELLING with badges/ratings
+// Chapter 3: Fall (50-75%) - BEST SELLING with badges/ratings (6 items)
 const bestSellers = [
   { id: "leather-jacket", name: "Premium Leather Jacket", price: "$349", icon: Shirt, badge: "#1", color: "#f97316", rating: 5 },
   { id: "designer-bag", name: "Designer Crossbody", price: "$275", icon: ShoppingBag, badge: "#2", color: "#ea580c", rating: 4.9 },
   { id: "chelsea-boots", name: "Suede Chelsea Boots", price: "$195", icon: Footprints, badge: "#3", color: "#fb923c", rating: 4.8 },
   { id: "smart-watch", name: "Luxury Smart Watch", price: "$429", icon: Watch, badge: "#4", color: "#f59e0b", rating: 4.7 },
+  { id: "wool-sweater", name: "Merino Wool Sweater", price: "$145", icon: Shirt, badge: "#5", color: "#fdba74", rating: 4.6 },
+  { id: "leather-belt", name: "Italian Leather Belt", price: "$89", icon: Watch, badge: "#6", color: "#fed7aa", rating: 4.5 },
 ];
 
-// Chapter 4: Winter (75-100%) - FEATURED PRODUCTS with hero CTA
+// Chapter 4: Winter (75-100%) - FEATURED PRODUCTS with hero CTA (6 items)
 const featuredProducts = [
   { id: "cashmere-coat", name: "Cashmere Wool Coat", price: "$459", original: "$699", discount: "34%", icon: Shirt, color: "#38bdf8", featured: true },
   { id: "winter-boots", name: "Shearling Snow Boots", price: "$289", original: "$399", discount: "28%", icon: Footprints, color: "#0ea5e9", featured: true },
   { id: "knit-scarf", name: "Merino Knit Scarf", price: "$89", original: "$129", discount: "31%", icon: Watch, color: "#7dd3fc", featured: false },
   { id: "tote-bag", name: "Quilted Tote Bag", price: "$159", original: "$229", discount: "30%", icon: ShoppingBag, color: "#22d3ee", featured: false },
+  { id: "puffer-jacket", name: "Down Puffer Jacket", price: "$329", original: "$449", discount: "27%", icon: Shirt, color: "#67e8f9", featured: false },
+  { id: "fleece-gloves", name: "Tech Fleece Gloves", price: "$49", original: "$69", discount: "29%", icon: Watch, color: "#a5f3fc", featured: false },
 ];
 
 const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
@@ -178,10 +184,10 @@ const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
     return trails;
   };
 
-  // Check if chapter is in range
+  // Check if chapter is in range - extended range for Winter to catch 100%
   const isChapterVisible = (chapterIndex: number) => {
     const start = chapterIndex * 0.25;
-    const end = (chapterIndex + 1) * 0.25;
+    const end = chapterIndex === 3 ? 1.02 : (chapterIndex + 1) * 0.25;
     return scrollProgress >= start - 0.02 && scrollProgress <= end + 0.02;
   };
 
