@@ -18,13 +18,13 @@ const Hero3DScene = ({ scrollProgress }: Hero3DSceneProps) => {
     return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   }, []);
 
-  // Seasonal light colors based on scroll
+  // Seasonal light colors synced with 4 chapters
+  // 0-25% = Spring, 25-50% = Summer, 50-75% = Autumn, 75-100% = Winter
   const getSeasonalAccent = () => {
-    if (scrollProgress < 0.50) return { rim: "#00ffff", fill: "#ff00ff" }; // Default cyan/magenta
-    if (scrollProgress < 0.625) return { rim: "#ffb7c5", fill: "#ff69b4" }; // Spring - cherry blossom pink
-    if (scrollProgress < 0.75) return { rim: "#ffd700", fill: "#ff8c00" }; // Summer - golden/orange
-    if (scrollProgress < 0.875) return { rim: "#ff6b35", fill: "#8b4513" }; // Autumn - orange/brown
-    return { rim: "#87ceeb", fill: "#4169e1" }; // Winter - ice blue
+    if (scrollProgress < 0.25) return { rim: "#f0abfc", fill: "#d946ef" }; // Spring - pink/purple
+    if (scrollProgress < 0.50) return { rim: "#fde047", fill: "#f59e0b" }; // Summer - gold/yellow
+    if (scrollProgress < 0.75) return { rim: "#fb923c", fill: "#ea580c" }; // Autumn - orange
+    return { rim: "#7dd3fc", fill: "#0ea5e9" }; // Winter - ice blue
   };
 
   const seasonalColors = getSeasonalAccent();
