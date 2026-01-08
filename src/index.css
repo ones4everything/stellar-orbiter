@@ -80,18 +80,11 @@
 
   html {
     scroll-behavior: smooth;
-    scroll-snap-type: y mandatory;
   }
 
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  }
-
-  /* Scroll snap for chapter sections */
-  .snap-chapter {
-    scroll-snap-align: start;
-    scroll-snap-stop: always;
   }
 
   /* Custom scrollbar */
