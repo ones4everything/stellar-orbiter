@@ -1,7 +1,7 @@
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { 
-  Flower2, Sun, Leaf, Snowflake, 
-  Brain, Atom, Glasses, Laptop, Zap,
+  Sun, Snowflake, 
+  Brain, Atom, Glasses, Laptop,
   ShoppingCart, Check, Percent
 } from "lucide-react";
 import { useState } from "react";
@@ -10,7 +10,6 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ChapterContentProps {
   scrollProgress: number;
-  activeChapterIndex: number;
 }
 
 // Chapter 1: Spring - Menu Categories
@@ -45,7 +44,7 @@ const saleItems = [
   { id: "snow-link", name: "Snow Neural", price: "$1,899", original: "$2,799", discount: "32%", icon: Brain, color: "#22d3ee" },
 ];
 
-const ChapterContent = ({ scrollProgress, activeChapterIndex }: ChapterContentProps) => {
+const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
   const [addedId, setAddedId] = useState<string | null>(null);
   const { addItem } = useCart();
   const isMobile = useIsMobile();
@@ -63,56 +62,52 @@ const ChapterContent = ({ scrollProgress, activeChapterIndex }: ChapterContentPr
     setTimeout(() => setAddedId(null), 1500);
   };
 
-  // Calculate opacity for each chapter based on scroll progress
-  // Chapter 0: Spring (0-25%), Chapter 1: Summer (25-50%), Chapter 2: Autumn (50-75%), Chapter 3: Winter (75-100%)
-  const getChapterOpacity = (chapterIndex: number) => {
+  // Get individual card visibility based on scroll within its chapter
+  // Each chapter is 25% of scroll, and cards appear sequentially within that range
+  const getCardVisibility = (chapterIndex: number, cardIndex: number, totalCards: number) => {
     const chapterStart = chapterIndex * 0.25;
     const chapterEnd = (chapterIndex + 1) * 0.25;
-    const fadeInDuration = 0.05;
-    const fadeOutDuration = 0.05;
-
-    // Spring (index 0) - visible from start, fade out at end
-    if (chapterIndex === 0) {
-      if (scrollProgress < chapterEnd - fadeOutDuration) return 1;
-      if (scrollProgress < chapterEnd) return (chapterEnd - scrollProgress) / fadeOutDuration;
-      return 0;
+    const chapterProgress = (scrollProgress - chapterStart) / 0.25; // 0-1 within chapter
+    
+    // Chapter not active
+    if (scrollProgress < chapterStart - 0.02 || scrollProgress > chapterEnd + 0.02) {
+      return { opacity: 0, scale: 0.8 };
     }
-
-    // Winter (index 3) - fade in, stay visible till end
-    if (chapterIndex === 3) {
-      if (scrollProgress < chapterStart) return 0;
-      if (scrollProgress < chapterStart + fadeInDuration) {
-        return (scrollProgress - chapterStart) / fadeInDuration;
-      }
-      return 1;
+    
+    // Calculate when this specific card should appear
+    const cardAppearStart = cardIndex / totalCards;
+    const cardAppearDuration = 0.25; // Each card takes 25% of chapter to fully appear
+    const cardLocalProgress = (chapterProgress - cardAppearStart) / cardAppearDuration;
+    
+    // Fade out at chapter end
+    const fadeOutStart = 0.85;
+    const fadeOutProgress = (chapterProgress - fadeOutStart) / (1 - fadeOutStart);
+    
+    let opacity = 0;
+    let scale = 0.8;
+    
+    if (chapterProgress >= cardAppearStart) {
+      opacity = Math.min(1, cardLocalProgress);
+      scale = 0.8 + Math.min(0.2, cardLocalProgress * 0.2);
     }
-
-    // Middle chapters - fade in and fade out
-    if (scrollProgress < chapterStart) return 0;
-    if (scrollProgress < chapterStart + fadeInDuration) {
-      return (scrollProgress - chapterStart) / fadeInDuration;
+    
+    // Apply fade out at chapter end
+    if (chapterProgress > fadeOutStart) {
+      const fadeOut = 1 - Math.min(1, fadeOutProgress);
+      opacity *= fadeOut;
+      scale = 0.8 + 0.2 * fadeOut;
     }
-    if (scrollProgress < chapterEnd - fadeOutDuration) return 1;
-    if (scrollProgress < chapterEnd) {
-      return (chapterEnd - scrollProgress) / fadeOutDuration;
-    }
-    return 0;
+    
+    return { opacity: Math.max(0, Math.min(1, opacity)), scale };
   };
-
-  const springOpacity = getChapterOpacity(0);
-  const summerOpacity = getChapterOpacity(1);
-  const autumnOpacity = getChapterOpacity(2);
-  const winterOpacity = getChapterOpacity(3);
 
   // Card positioning - orbit around center
   const getCardPosition = (index: number, total: number, radius: number) => {
     if (isMobile) {
-      // Vertical stack on mobile - offset from center
       const spacing = 85;
       const startY = -((total - 1) * spacing) / 2;
-      return { x: 0, y: startY + index * spacing + 20 }; // +20 to push below title
+      return { x: 0, y: startY + index * spacing + 20 };
     }
-    // Orbit on desktop - spread around the sphere
     const angle = (index / total) * Math.PI * 2 - Math.PI / 2;
     return {
       x: Math.cos(angle) * radius,
@@ -120,251 +115,246 @@ const ChapterContent = ({ scrollProgress, activeChapterIndex }: ChapterContentPr
     };
   };
 
+  // Check if chapter is in range
+  const isChapterVisible = (chapterIndex: number) => {
+    const start = chapterIndex * 0.25;
+    const end = (chapterIndex + 1) * 0.25;
+    return scrollProgress >= start - 0.02 && scrollProgress <= end + 0.02;
+  };
+
   return (
     <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-30">
-      {/* Spring - Categories */}
-      <AnimatePresence>
-        {springOpacity > 0.01 && (
-          <motion.div
-            className="absolute inset-0 flex items-center justify-center"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: springOpacity }}
-            exit={{ opacity: 0 }}
-          >
-            {categories.map((cat, idx) => {
-              const pos = getCardPosition(idx, categories.length, 220);
-              const Icon = cat.icon;
-              return (
-                <motion.div
-                  key={cat.id}
-                  className="absolute pointer-events-auto cursor-pointer"
-                  style={{
-                    left: `calc(50% + ${pos.x}px)`,
-                    top: `calc(50% + ${pos.y}px)`,
-                    transform: "translate(-50%, -50%)",
-                  }}
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: idx * 0.1 }}
-                  whileHover={{ scale: 1.05 }}
+      {/* Spring - Categories (sequential appearance) */}
+      {isChapterVisible(0) && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          {categories.map((cat, idx) => {
+            const pos = getCardPosition(idx, categories.length, 220);
+            const Icon = cat.icon;
+            const { opacity, scale } = getCardVisibility(0, idx, categories.length);
+            
+            if (opacity < 0.01) return null;
+            
+            return (
+              <motion.div
+                key={cat.id}
+                className="absolute pointer-events-auto cursor-pointer"
+                style={{
+                  left: `calc(50% + ${pos.x}px)`,
+                  top: `calc(50% + ${pos.y}px)`,
+                  transform: "translate(-50%, -50%)",
+                  opacity,
+                }}
+                animate={{ scale }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                whileHover={{ scale: scale * 1.05 }}
+              >
+                <div 
+                  className="glass-card rounded-xl p-4 w-[140px] md:w-[160px] border"
+                  style={{ borderColor: `${cat.color}30` }}
                 >
                   <div 
-                    className="glass-card rounded-xl p-4 w-[140px] md:w-[160px] border"
-                    style={{ borderColor: `${cat.color}30` }}
+                    className="w-12 h-12 rounded-lg flex items-center justify-center mb-3"
+                    style={{ background: `linear-gradient(135deg, ${cat.color}30, ${cat.color}10)` }}
                   >
-                    <div 
-                      className="w-12 h-12 rounded-lg flex items-center justify-center mb-3"
-                      style={{ background: `linear-gradient(135deg, ${cat.color}30, ${cat.color}10)` }}
-                    >
-                      <Icon className="w-6 h-6" style={{ color: cat.color }} />
-                    </div>
-                    <h3 className="text-foreground font-semibold text-sm">{cat.label}</h3>
-                    <p className="text-muted-foreground text-xs">{cat.count} products</p>
+                    <Icon className="w-6 h-6" style={{ color: cat.color }} />
                   </div>
-                </motion.div>
-              );
-            })}
-          </motion.div>
-        )}
-      </AnimatePresence>
+                  <h3 className="text-foreground font-semibold text-sm">{cat.label}</h3>
+                  <p className="text-muted-foreground text-xs">{cat.count} products</p>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
 
-      {/* Summer - Seasonal Products */}
-      <AnimatePresence>
-        {summerOpacity > 0.01 && (
-          <motion.div
-            className="absolute inset-0 flex items-center justify-center"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: summerOpacity }}
-            exit={{ opacity: 0 }}
-          >
-            {seasonalProducts.map((product, idx) => {
-              const pos = getCardPosition(idx, seasonalProducts.length, 200);
-              const Icon = product.icon;
-              return (
-                <motion.div
-                  key={product.id}
-                  className="absolute pointer-events-auto cursor-pointer"
-                  style={{
-                    left: `calc(50% + ${pos.x}px)`,
-                    top: `calc(50% + ${pos.y}px)`,
-                    transform: "translate(-50%, -50%)",
-                  }}
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: idx * 0.1 }}
-                  whileHover={{ scale: 1.05 }}
+      {/* Summer - Seasonal Products (sequential appearance) */}
+      {isChapterVisible(1) && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          {seasonalProducts.map((product, idx) => {
+            const pos = getCardPosition(idx, seasonalProducts.length, 200);
+            const Icon = product.icon;
+            const { opacity, scale } = getCardVisibility(1, idx, seasonalProducts.length);
+            
+            if (opacity < 0.01) return null;
+            
+            return (
+              <motion.div
+                key={product.id}
+                className="absolute pointer-events-auto cursor-pointer"
+                style={{
+                  left: `calc(50% + ${pos.x}px)`,
+                  top: `calc(50% + ${pos.y}px)`,
+                  transform: "translate(-50%, -50%)",
+                  opacity,
+                }}
+                animate={{ scale }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                whileHover={{ scale: scale * 1.05 }}
+              >
+                <div 
+                  className="glass-card rounded-xl p-4 w-[150px] md:w-[180px] border"
+                  style={{ borderColor: `${product.color}30` }}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <Sun className="w-4 h-4 text-yellow-400" />
+                    <span className="text-xs text-yellow-400 font-medium">Summer Edition</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div 
+                      className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
+                      style={{ background: `linear-gradient(135deg, ${product.color}30, ${product.color}10)` }}
+                    >
+                      <Icon className="w-5 h-5" style={{ color: product.color }} />
+                    </div>
+                    <div>
+                      <h3 className="text-foreground font-semibold text-sm">{product.name}</h3>
+                      <p className="font-bold text-sm" style={{ color: product.color }}>{product.price}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleAddToCart(product)}
+                    className="w-full mt-3 py-1.5 rounded-md text-xs font-medium flex items-center justify-center gap-1 text-background"
+                    style={{ backgroundColor: product.color }}
+                  >
+                    {addedId === product.id ? <Check className="w-3 h-3" /> : <ShoppingCart className="w-3 h-3" />}
+                    {addedId === product.id ? "Added!" : "Add to Cart"}
+                  </button>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Autumn - Best Sellers (sequential appearance) */}
+      {isChapterVisible(2) && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          {bestSellers.map((product, idx) => {
+            const pos = getCardPosition(idx, bestSellers.length, 210);
+            const Icon = product.icon;
+            const { opacity, scale } = getCardVisibility(2, idx, bestSellers.length);
+            
+            if (opacity < 0.01) return null;
+            
+            return (
+              <motion.div
+                key={product.id}
+                className="absolute pointer-events-auto cursor-pointer"
+                style={{
+                  left: `calc(50% + ${pos.x}px)`,
+                  top: `calc(50% + ${pos.y}px)`,
+                  transform: "translate(-50%, -50%)",
+                  opacity,
+                }}
+                animate={{ scale }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                whileHover={{ scale: scale * 1.05 }}
+              >
+                <div 
+                  className="glass-card rounded-xl p-4 w-[150px] md:w-[180px] border relative overflow-hidden"
+                  style={{ borderColor: `${product.color}30` }}
                 >
                   <div 
-                    className="glass-card rounded-xl p-4 w-[150px] md:w-[180px] border"
-                    style={{ borderColor: `${product.color}30` }}
+                    className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-medium"
+                    style={{ backgroundColor: `${product.color}20`, color: product.color }}
                   >
-                    <div className="flex items-center gap-2 mb-2">
-                      <Sun className="w-4 h-4 text-yellow-400" />
-                      <span className="text-xs text-yellow-400 font-medium">Summer Edition</span>
+                    {product.badge}
+                  </div>
+                  <div className="flex items-center gap-3 mt-4">
+                    <div 
+                      className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
+                      style={{ background: `linear-gradient(135deg, ${product.color}30, ${product.color}10)` }}
+                    >
+                      <Icon className="w-5 h-5" style={{ color: product.color }} />
                     </div>
-                    <div className="flex items-center gap-3">
-                      <div 
-                        className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
-                        style={{ background: `linear-gradient(135deg, ${product.color}30, ${product.color}10)` }}
-                      >
-                        <Icon className="w-5 h-5" style={{ color: product.color }} />
-                      </div>
-                      <div>
-                        <h3 className="text-foreground font-semibold text-sm">{product.name}</h3>
+                    <div>
+                      <h3 className="text-foreground font-semibold text-sm">{product.name}</h3>
+                      <p className="font-bold text-sm" style={{ color: product.color }}>{product.price}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleAddToCart(product)}
+                    className="w-full mt-3 py-1.5 rounded-md text-xs font-medium flex items-center justify-center gap-1 text-background"
+                    style={{ backgroundColor: product.color }}
+                  >
+                    {addedId === product.id ? <Check className="w-3 h-3" /> : <ShoppingCart className="w-3 h-3" />}
+                    {addedId === product.id ? "Added!" : "Add to Cart"}
+                  </button>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Winter - Sale Items (sequential appearance) */}
+      {isChapterVisible(3) && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          {saleItems.map((product, idx) => {
+            const pos = getCardPosition(idx, saleItems.length, 200);
+            const Icon = product.icon;
+            const { opacity, scale } = getCardVisibility(3, idx, saleItems.length);
+            
+            if (opacity < 0.01) return null;
+            
+            return (
+              <motion.div
+                key={product.id}
+                className="absolute pointer-events-auto cursor-pointer"
+                style={{
+                  left: `calc(50% + ${pos.x}px)`,
+                  top: `calc(50% + ${pos.y}px)`,
+                  transform: "translate(-50%, -50%)",
+                  opacity,
+                }}
+                animate={{ scale }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                whileHover={{ scale: scale * 1.05 }}
+              >
+                <div 
+                  className="glass-card rounded-xl p-4 w-[150px] md:w-[180px] border relative overflow-hidden"
+                  style={{ borderColor: `${product.color}30` }}
+                >
+                  <div 
+                    className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1"
+                    style={{ backgroundColor: "#ef444420", color: "#ef4444" }}
+                  >
+                    <Percent className="w-3 h-3" />
+                    {product.discount} OFF
+                  </div>
+                  <div className="flex items-center gap-2 mb-2 mt-4">
+                    <Snowflake className="w-4 h-4" style={{ color: product.color }} />
+                    <span className="text-xs font-medium" style={{ color: product.color }}>Winter Sale</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div 
+                      className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
+                      style={{ background: `linear-gradient(135deg, ${product.color}30, ${product.color}10)` }}
+                    >
+                      <Icon className="w-5 h-5" style={{ color: product.color }} />
+                    </div>
+                    <div>
+                      <h3 className="text-foreground font-semibold text-sm">{product.name}</h3>
+                      <div className="flex items-center gap-2">
                         <p className="font-bold text-sm" style={{ color: product.color }}>{product.price}</p>
+                        <p className="text-muted-foreground text-xs line-through">{product.original}</p>
                       </div>
                     </div>
-                    <button
-                      onClick={() => handleAddToCart(product)}
-                      className="w-full mt-3 py-1.5 rounded-md text-xs font-medium flex items-center justify-center gap-1 text-background"
-                      style={{ backgroundColor: product.color }}
-                    >
-                      {addedId === product.id ? <Check className="w-3 h-3" /> : <ShoppingCart className="w-3 h-3" />}
-                      {addedId === product.id ? "Added!" : "Add to Cart"}
-                    </button>
                   </div>
-                </motion.div>
-              );
-            })}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Autumn - Best Sellers */}
-      <AnimatePresence>
-        {autumnOpacity > 0.01 && (
-          <motion.div
-            className="absolute inset-0 flex items-center justify-center"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: autumnOpacity }}
-            exit={{ opacity: 0 }}
-          >
-            {bestSellers.map((product, idx) => {
-              const pos = getCardPosition(idx, bestSellers.length, 210);
-              const Icon = product.icon;
-              return (
-                <motion.div
-                  key={product.id}
-                  className="absolute pointer-events-auto cursor-pointer"
-                  style={{
-                    left: `calc(50% + ${pos.x}px)`,
-                    top: `calc(50% + ${pos.y}px)`,
-                    transform: "translate(-50%, -50%)",
-                  }}
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: idx * 0.1 }}
-                  whileHover={{ scale: 1.05 }}
-                >
-                  <div 
-                    className="glass-card rounded-xl p-4 w-[150px] md:w-[180px] border relative overflow-hidden"
-                    style={{ borderColor: `${product.color}30` }}
+                  <button
+                    onClick={() => handleAddToCart(product)}
+                    className="w-full mt-3 py-1.5 rounded-md text-xs font-medium flex items-center justify-center gap-1 text-background"
+                    style={{ backgroundColor: product.color }}
                   >
-                    <div 
-                      className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-medium"
-                      style={{ backgroundColor: `${product.color}20`, color: product.color }}
-                    >
-                      {product.badge}
-                    </div>
-                    <div className="flex items-center gap-3 mt-4">
-                      <div 
-                        className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
-                        style={{ background: `linear-gradient(135deg, ${product.color}30, ${product.color}10)` }}
-                      >
-                        <Icon className="w-5 h-5" style={{ color: product.color }} />
-                      </div>
-                      <div>
-                        <h3 className="text-foreground font-semibold text-sm">{product.name}</h3>
-                        <p className="font-bold text-sm" style={{ color: product.color }}>{product.price}</p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => handleAddToCart(product)}
-                      className="w-full mt-3 py-1.5 rounded-md text-xs font-medium flex items-center justify-center gap-1 text-background"
-                      style={{ backgroundColor: product.color }}
-                    >
-                      {addedId === product.id ? <Check className="w-3 h-3" /> : <ShoppingCart className="w-3 h-3" />}
-                      {addedId === product.id ? "Added!" : "Add to Cart"}
-                    </button>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Winter - Sale Items */}
-      <AnimatePresence>
-        {winterOpacity > 0.01 && (
-          <motion.div
-            className="absolute inset-0 flex items-center justify-center"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: winterOpacity }}
-            exit={{ opacity: 0 }}
-          >
-            {saleItems.map((product, idx) => {
-              const pos = getCardPosition(idx, saleItems.length, 200);
-              const Icon = product.icon;
-              return (
-                <motion.div
-                  key={product.id}
-                  className="absolute pointer-events-auto cursor-pointer"
-                  style={{
-                    left: `calc(50% + ${pos.x}px)`,
-                    top: `calc(50% + ${pos.y}px)`,
-                    transform: "translate(-50%, -50%)",
-                  }}
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: idx * 0.1 }}
-                  whileHover={{ scale: 1.05 }}
-                >
-                  <div 
-                    className="glass-card rounded-xl p-4 w-[150px] md:w-[180px] border relative overflow-hidden"
-                    style={{ borderColor: `${product.color}30` }}
-                  >
-                    <div 
-                      className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1"
-                      style={{ backgroundColor: "#ef444420", color: "#ef4444" }}
-                    >
-                      <Percent className="w-3 h-3" />
-                      {product.discount} OFF
-                    </div>
-                    <div className="flex items-center gap-2 mb-2 mt-4">
-                      <Snowflake className="w-4 h-4" style={{ color: product.color }} />
-                      <span className="text-xs font-medium" style={{ color: product.color }}>Winter Sale</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div 
-                        className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
-                        style={{ background: `linear-gradient(135deg, ${product.color}30, ${product.color}10)` }}
-                      >
-                        <Icon className="w-5 h-5" style={{ color: product.color }} />
-                      </div>
-                      <div>
-                        <h3 className="text-foreground font-semibold text-sm">{product.name}</h3>
-                        <div className="flex items-center gap-2">
-                          <p className="font-bold text-sm" style={{ color: product.color }}>{product.price}</p>
-                          <p className="text-muted-foreground text-xs line-through">{product.original}</p>
-                        </div>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => handleAddToCart(product)}
-                      className="w-full mt-3 py-1.5 rounded-md text-xs font-medium flex items-center justify-center gap-1 text-background"
-                      style={{ backgroundColor: product.color }}
-                    >
-                      {addedId === product.id ? <Check className="w-3 h-3" /> : <ShoppingCart className="w-3 h-3" />}
-                      {addedId === product.id ? "Added!" : "Add to Cart"}
-                    </button>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </motion.div>
-        )}
-      </AnimatePresence>
+                    {addedId === product.id ? <Check className="w-3 h-3" /> : <ShoppingCart className="w-3 h-3" />}
+                    {addedId === product.id ? "Added!" : "Add to Cart"}
+                  </button>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };

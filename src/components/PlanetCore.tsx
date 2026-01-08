@@ -67,34 +67,33 @@ const PlanetCore = ({ scrollProgress }: PlanetCoreProps) => {
     // Get seasonal colors
     const seasonColors = getSeasonalColors(scrollProgress);
 
-    // Smoothly interpolate material color
-    materialRef.current.color.lerp(seasonColors.main, 0.05);
-    materialRef.current.emissive.lerp(seasonColors.emissive, 0.05);
+    // Smoothly interpolate material color (scroll-driven, no time animation)
+    materialRef.current.color.lerp(seasonColors.main, 0.08);
+    materialRef.current.emissive.lerp(seasonColors.emissive, 0.08);
     materialRef.current.emissiveIntensity = THREE.MathUtils.lerp(
       materialRef.current.emissiveIntensity,
       seasonColors.intensity,
-      0.05
+      0.08
     );
 
     if (prefersReducedMotion) return;
 
-    // Rotation tied to scroll (full rotation over entire scroll)
+    // SCROLL-DRIVEN ROTATION ONLY - no time-based animation
+    // Full rotation over entire scroll (0 → 2π)
     const targetRotationY = scrollProgress * Math.PI * 2;
-
     currentRotationY.current = THREE.MathUtils.lerp(
       currentRotationY.current,
       targetRotationY,
-      0.06
+      0.1 // Responsive but smooth
     );
-
     meshRef.current.rotation.y = currentRotationY.current;
 
-    // Subtle tilt based on scroll
-    const targetTilt = Math.sin(scrollProgress * Math.PI * 2) * 0.1;
+    // Subtle tilt based on scroll position
+    const targetTilt = Math.sin(scrollProgress * Math.PI * 2) * 0.15;
     currentTilt.current = THREE.MathUtils.lerp(
       currentTilt.current,
       targetTilt,
-      0.04
+      0.08
     );
     meshRef.current.rotation.x = currentTilt.current;
   });
