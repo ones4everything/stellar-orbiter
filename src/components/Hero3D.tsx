@@ -234,10 +234,7 @@ const Hero3D = () => {
         </AnimatePresence>
 
         {/* Chapter-specific content */}
-        <ChapterContent 
-          scrollProgress={scrollValue} 
-          activeChapterIndex={activeChapterIndex} 
-        />
+        <ChapterContent scrollProgress={scrollValue} />
 
         {/* Desktop chapter markers (right side) */}
         <nav
