@@ -91,16 +91,25 @@ const Hero3D = () => {
       const el = containerRef.current;
       if (!el) return;
 
-      const rect = el.getBoundingClientRect();
-      const scrollableHeight = el.scrollHeight - window.innerHeight;
-      const scrolled = -rect.top;
-      const progress = Math.max(0, Math.min(1, scrolled / scrollableHeight));
+      // Use page coordinates (reliable even with positioned parents)
+      const startY = el.getBoundingClientRect().top + window.scrollY;
+      const height = el.getBoundingClientRect().height;
+      const endY = startY + height - window.innerHeight;
+      const range = Math.max(1, endY - startY);
+
+      const raw = (window.scrollY - startY) / range;
+      const progress = Math.max(0, Math.min(1, raw));
       setScrollValue(progress);
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("resize", handleScroll, { passive: true });
     handleScroll();
-    return () => window.removeEventListener("scroll", handleScroll);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleScroll);
+    };
   }, []);
 
   // Jump to a specific chapter
