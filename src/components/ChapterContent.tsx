@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { 
   Sun, Snowflake, Star,
-  Brain, Atom, Glasses, Laptop,
+  ShoppingBag, Shirt, Watch, Footprints,
   ShoppingCart, Check, Percent
 } from "lucide-react";
 import { useState, useMemo } from "react";
@@ -27,34 +27,34 @@ interface ChapterContentProps {
 
 // Chapter 1: Spring (0-25%) - CATEGORIES
 const categories = [
-  { id: "men", label: "Men", icon: Brain, color: "#e879f9", count: 124 },
-  { id: "women", label: "Women", icon: Atom, color: "#a855f7", count: 186 },
-  { id: "kids", label: "Kids", icon: Glasses, color: "#06b6d4", count: 92 },
-  { id: "accessories", label: "Accessories", icon: Laptop, color: "#10b981", count: 215 },
+  { id: "men", label: "Men's Fashion", icon: Shirt, color: "#e879f9", count: 248 },
+  { id: "women", label: "Women's Style", icon: ShoppingBag, color: "#a855f7", count: 312 },
+  { id: "footwear", label: "Footwear", icon: Footprints, color: "#06b6d4", count: 156 },
+  { id: "accessories", label: "Accessories", icon: Watch, color: "#10b981", count: 189 },
 ];
 
 // Chapter 2: Summer (25-50%) - SEASONAL PRODUCTS
 const seasonalProducts = [
-  { id: "solar-core", name: "Solar Core X", price: "$4,999", icon: Atom, color: "#fbbf24" },
-  { id: "beach-deck", name: "Beach Deck Pro", price: "$2,799", icon: Laptop, color: "#f59e0b" },
-  { id: "sun-lens", name: "Sun Lens AR", price: "$1,899", icon: Glasses, color: "#facc15" },
-  { id: "ray-link", name: "Ray Neural", price: "$3,299", icon: Brain, color: "#eab308" },
+  { id: "linen-blazer", name: "Linen Summer Blazer", price: "$189", icon: Shirt, color: "#fbbf24" },
+  { id: "beach-tote", name: "Canvas Beach Tote", price: "$79", icon: ShoppingBag, color: "#f59e0b" },
+  { id: "sun-hat", name: "Wide Brim Sun Hat", price: "$49", icon: Watch, color: "#facc15" },
+  { id: "espadrilles", name: "Classic Espadrilles", price: "$95", icon: Footprints, color: "#eab308" },
 ];
 
 // Chapter 3: Fall (50-75%) - BEST SELLING with badges/ratings
 const bestSellers = [
-  { id: "neural-pro", name: "Neural Link Pro", price: "$2,499", icon: Brain, badge: "#1", color: "#f97316", rating: 5 },
-  { id: "quantum-x", name: "Quantum Core X", price: "$4,999", icon: Atom, badge: "#2", color: "#ea580c", rating: 4.8 },
-  { id: "holo-7", name: "Holo Display 7", price: "$1,899", icon: Glasses, badge: "#3", color: "#fb923c", rating: 4.7 },
-  { id: "cyber-alpha", name: "Cyber Core Alpha", price: "$3,299", icon: Laptop, badge: "#4", color: "#f59e0b", rating: 4.6 },
+  { id: "leather-jacket", name: "Premium Leather Jacket", price: "$349", icon: Shirt, badge: "#1", color: "#f97316", rating: 5 },
+  { id: "designer-bag", name: "Designer Crossbody", price: "$275", icon: ShoppingBag, badge: "#2", color: "#ea580c", rating: 4.9 },
+  { id: "chelsea-boots", name: "Suede Chelsea Boots", price: "$195", icon: Footprints, badge: "#3", color: "#fb923c", rating: 4.8 },
+  { id: "smart-watch", name: "Luxury Smart Watch", price: "$429", icon: Watch, badge: "#4", color: "#f59e0b", rating: 4.7 },
 ];
 
 // Chapter 4: Winter (75-100%) - FEATURED PRODUCTS with hero CTA
 const featuredProducts = [
-  { id: "frost-deck", name: "Frost Deck", price: "$2,399", original: "$3,599", discount: "33%", icon: Laptop, color: "#38bdf8", featured: true },
-  { id: "cryo-core", name: "Cryo Core", price: "$4,999", original: "$6,999", discount: "28%", icon: Atom, color: "#0ea5e9", featured: true },
-  { id: "ice-lens", name: "Ice Lens Pro", price: "$1,299", original: "$1,899", discount: "32%", icon: Glasses, color: "#7dd3fc", featured: false },
-  { id: "snow-link", name: "Snow Neural", price: "$1,899", original: "$2,799", discount: "32%", icon: Brain, color: "#22d3ee", featured: false },
+  { id: "cashmere-coat", name: "Cashmere Wool Coat", price: "$459", original: "$699", discount: "34%", icon: Shirt, color: "#38bdf8", featured: true },
+  { id: "winter-boots", name: "Shearling Snow Boots", price: "$289", original: "$399", discount: "28%", icon: Footprints, color: "#0ea5e9", featured: true },
+  { id: "knit-scarf", name: "Merino Knit Scarf", price: "$89", original: "$129", discount: "31%", icon: Watch, color: "#7dd3fc", featured: false },
+  { id: "tote-bag", name: "Quilted Tote Bag", price: "$159", original: "$229", discount: "30%", icon: ShoppingBag, color: "#22d3ee", featured: false },
 ];
 
 const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
