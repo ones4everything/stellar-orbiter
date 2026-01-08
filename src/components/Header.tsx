@@ -38,10 +38,12 @@ const Header = () => {
           <div className="hidden md:flex items-center relative">
             <Search className="absolute left-4 w-4 h-4 text-muted-foreground" />
             <input
+              id="search-input"
+              name="search"
               type="text"
               placeholder="Search..."
               className="search-input w-64 lg:w-80 pl-10 pr-10 text-sm"
-              aria-label="Search products"
+              autoComplete="off"
             />
             <button
               className="absolute right-3 p-1 rounded-full hover:bg-primary/10 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50"
