@@ -49,13 +49,6 @@ export const CHAPTERS = [
   },
 ] as const;
 
-// Seasonal background gradients
-const SEASONAL_BACKGROUNDS = {
-  spring: "linear-gradient(180deg, hsl(260, 40%, 8%) 0%, hsl(330, 50%, 12%) 50%, hsl(260, 40%, 6%) 100%)",
-  summer: "linear-gradient(180deg, hsl(80, 40%, 8%) 0%, hsl(50, 60%, 12%) 50%, hsl(40, 50%, 6%) 100%)",
-  autumn: "linear-gradient(180deg, hsl(15, 50%, 8%) 0%, hsl(25, 60%, 14%) 50%, hsl(10, 45%, 6%) 100%)",
-  winter: "linear-gradient(180deg, hsl(220, 50%, 6%) 0%, hsl(210, 60%, 12%) 50%, hsl(220, 50%, 4%) 100%)",
-};
 
 const Hero3D = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -138,29 +131,17 @@ const Hero3D = () => {
     return 3;
   }, [scrollValue]);
 
-  // Current seasonal background
-  const currentBackground = useMemo(() => {
-    if (scrollValue < 0.25) return SEASONAL_BACKGROUNDS.spring;
-    if (scrollValue < 0.5) return SEASONAL_BACKGROUNDS.summer;
-    if (scrollValue < 0.75) return SEASONAL_BACKGROUNDS.autumn;
-    return SEASONAL_BACKGROUNDS.winter;
-  }, [scrollValue]);
-
   const activeChapter = CHAPTERS[activeChapterIndex];
 
   return (
     <div
       ref={containerRef}
+      data-hero-container
       className="relative"
       style={{ height: "400vh" }}
     >
       {/* Sticky container - sphere stays fixed in center */}
       <div className="sticky top-0 h-screen overflow-hidden">
-        {/* Seasonal background */}
-        <motion.div
-          className="absolute inset-0 transition-all duration-700"
-          style={{ background: currentBackground }}
-        />
 
         {/* Radial glow behind planet */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
