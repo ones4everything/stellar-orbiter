@@ -110,6 +110,8 @@ const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
         x: swayX, 
         y: baseY,
         rotateY: chapterProgress * 12 * (index % 2 === 0 ? 1 : -1),
+        angle,
+        chapterProgress,
       };
     }
     
@@ -117,8 +119,50 @@ const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
     return {
       x: Math.cos(angle) * radius,
       y: Math.sin(angle) * radius * 0.55,
-      rotateY: (Math.cos(angle) / radius) * radius * 8, // 3D flip based on position
+      rotateY: (Math.cos(angle) / radius) * radius * 8,
+      angle,
+      chapterProgress,
     };
+  };
+
+  // Generate trail positions (previous positions for comet effect)
+  const getTrailPositions = (
+    index: number,
+    total: number,
+    radius: number,
+    chapterIndex: number,
+    trailCount: number = 5
+  ) => {
+    const trails = [];
+    const baseAngle = (index / total) * Math.PI * 2 - Math.PI / 2;
+    const chapterStart = chapterIndex * 0.25;
+    const chapterProgress = Math.max(0, Math.min(1, (scrollProgress - chapterStart) / 0.25));
+    const rotationOffset = chapterProgress * Math.PI * 0.5;
+    
+    for (let i = 1; i <= trailCount; i++) {
+      // Trail follows behind the card (negative offset)
+      const trailAngle = baseAngle + rotationOffset - (i * 0.08);
+      const trailOpacity = (1 - i / (trailCount + 1)) * 0.4;
+      const trailScale = 1 - (i * 0.1);
+      
+      if (isMobile) {
+        const swayX = Math.sin(rotationOffset - (i * 0.1) + index * 0.8) * 20;
+        trails.push({
+          x: swayX - (i * 3),
+          y: 0,
+          opacity: trailOpacity * 0.5,
+          scale: trailScale,
+        });
+      } else {
+        trails.push({
+          x: Math.cos(trailAngle) * radius,
+          y: Math.sin(trailAngle) * radius * 0.55,
+          opacity: trailOpacity,
+          scale: trailScale,
+        });
+      }
+    }
+    return trails;
   };
 
   // Check if chapter is in range
@@ -128,11 +172,53 @@ const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
     return scrollProgress >= start - 0.02 && scrollProgress <= end + 0.02;
   };
 
+  // Trail component for glow effect
+  const OrbitalTrail = ({ 
+    trails, 
+    color, 
+    baseOpacity 
+  }: { 
+    trails: { x: number; y: number; opacity: number; scale: number }[];
+    color: string;
+    baseOpacity: number;
+  }) => {
+    if (isMobile) return null; // Skip trails on mobile for performance
+    
+    return (
+      <>
+        {trails.map((trail, i) => (
+          <div
+            key={i}
+            className="absolute rounded-full pointer-events-none"
+            style={{
+              left: `calc(50% + ${trail.x}px)`,
+              top: `calc(50% + ${trail.y}px)`,
+              transform: `translate(-50%, -50%) scale(${trail.scale})`,
+              width: "80px",
+              height: "80px",
+              background: `radial-gradient(circle, ${color}${Math.round(trail.opacity * baseOpacity * 255).toString(16).padStart(2, '0')}, transparent 70%)`,
+              filter: `blur(${8 + i * 4}px)`,
+            }}
+          />
+        ))}
+      </>
+    );
+  };
+
   return (
     <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-30">
       {/* Spring - Categories */}
       {isChapterVisible(0) && (
         <div className="absolute inset-0 flex items-center justify-center" style={{ perspective: "1000px" }}>
+          {/* Render trails first (behind cards) */}
+          {categories.map((cat, idx) => {
+            const trails = getTrailPositions(idx, categories.length, 220, 0);
+            const { opacity } = getCardVisibility(0);
+            if (opacity < 0.01) return null;
+            return <OrbitalTrail key={`trail-${cat.id}`} trails={trails} color={cat.color} baseOpacity={opacity} />;
+          })}
+          
+          {/* Render cards */}
           {categories.map((cat, idx) => {
             const pos = getOrbitalPosition(idx, categories.length, 220, 0);
             const Icon = cat.icon;
@@ -155,8 +241,13 @@ const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 whileHover={{ scale: scale * 1.05 }}
               >
+                {/* Card glow */}
                 <div 
-                  className="glass-card rounded-xl p-4 w-[140px] md:w-[160px] border"
+                  className="absolute inset-0 rounded-xl blur-xl opacity-40"
+                  style={{ background: `radial-gradient(circle, ${cat.color}60, transparent 70%)` }}
+                />
+                <div 
+                  className="glass-card rounded-xl p-4 w-[140px] md:w-[160px] border relative"
                   style={{ borderColor: `${cat.color}30` }}
                 >
                   <div 
@@ -177,6 +268,14 @@ const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
       {/* Summer - Seasonal Products */}
       {isChapterVisible(1) && (
         <div className="absolute inset-0 flex items-center justify-center" style={{ perspective: "1000px" }}>
+          {/* Render trails first */}
+          {seasonalProducts.map((product, idx) => {
+            const trails = getTrailPositions(idx, seasonalProducts.length, 200, 1);
+            const { opacity } = getCardVisibility(1);
+            if (opacity < 0.01) return null;
+            return <OrbitalTrail key={`trail-${product.id}`} trails={trails} color={product.color} baseOpacity={opacity} />;
+          })}
+          
           {seasonalProducts.map((product, idx) => {
             const pos = getOrbitalPosition(idx, seasonalProducts.length, 200, 1);
             const Icon = product.icon;
@@ -199,8 +298,13 @@ const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 whileHover={{ scale: scale * 1.05 }}
               >
+                {/* Card glow */}
                 <div 
-                  className="glass-card rounded-xl p-4 w-[150px] md:w-[180px] border"
+                  className="absolute inset-0 rounded-xl blur-xl opacity-40"
+                  style={{ background: `radial-gradient(circle, ${product.color}60, transparent 70%)` }}
+                />
+                <div 
+                  className="glass-card rounded-xl p-4 w-[150px] md:w-[180px] border relative"
                   style={{ borderColor: `${product.color}30` }}
                 >
                   <div className="flex items-center gap-2 mb-2">
@@ -237,6 +341,14 @@ const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
       {/* Autumn - Best Sellers */}
       {isChapterVisible(2) && (
         <div className="absolute inset-0 flex items-center justify-center" style={{ perspective: "1000px" }}>
+          {/* Render trails first */}
+          {bestSellers.map((product, idx) => {
+            const trails = getTrailPositions(idx, bestSellers.length, 210, 2);
+            const { opacity } = getCardVisibility(2);
+            if (opacity < 0.01) return null;
+            return <OrbitalTrail key={`trail-${product.id}`} trails={trails} color={product.color} baseOpacity={opacity} />;
+          })}
+          
           {bestSellers.map((product, idx) => {
             const pos = getOrbitalPosition(idx, bestSellers.length, 210, 2);
             const Icon = product.icon;
@@ -259,6 +371,11 @@ const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 whileHover={{ scale: scale * 1.05 }}
               >
+                {/* Card glow */}
+                <div 
+                  className="absolute inset-0 rounded-xl blur-xl opacity-40"
+                  style={{ background: `radial-gradient(circle, ${product.color}60, transparent 70%)` }}
+                />
                 <div 
                   className="glass-card rounded-xl p-4 w-[150px] md:w-[180px] border relative overflow-hidden"
                   style={{ borderColor: `${product.color}30` }}
@@ -299,6 +416,14 @@ const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
       {/* Winter - Sale Items */}
       {isChapterVisible(3) && (
         <div className="absolute inset-0 flex items-center justify-center" style={{ perspective: "1000px" }}>
+          {/* Render trails first */}
+          {saleItems.map((product, idx) => {
+            const trails = getTrailPositions(idx, saleItems.length, 200, 3);
+            const { opacity } = getCardVisibility(3);
+            if (opacity < 0.01) return null;
+            return <OrbitalTrail key={`trail-${product.id}`} trails={trails} color={product.color} baseOpacity={opacity} />;
+          })}
+          
           {saleItems.map((product, idx) => {
             const pos = getOrbitalPosition(idx, saleItems.length, 200, 3);
             const Icon = product.icon;
@@ -321,6 +446,11 @@ const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 whileHover={{ scale: scale * 1.05 }}
               >
+                {/* Card glow */}
+                <div 
+                  className="absolute inset-0 rounded-xl blur-xl opacity-40"
+                  style={{ background: `radial-gradient(circle, ${product.color}60, transparent 70%)` }}
+                />
                 <div 
                   className="glass-card rounded-xl p-4 w-[150px] md:w-[180px] border relative overflow-hidden"
                   style={{ borderColor: `${product.color}30` }}
