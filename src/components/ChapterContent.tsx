@@ -205,12 +205,83 @@ const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
     );
   };
 
+  // Connector line from sphere center to card
+  const OrbitalConnector = ({
+    x,
+    y,
+    color,
+    opacity,
+  }: {
+    x: number;
+    y: number;
+    color: string;
+    opacity: number;
+  }) => {
+    if (isMobile) return null; // Skip connectors on mobile
+    
+    return (
+      <svg
+        className="absolute pointer-events-none"
+        style={{
+          left: "50%",
+          top: "50%",
+          transform: "translate(-50%, -50%)",
+          width: Math.abs(x) * 2 + 100,
+          height: Math.abs(y) * 2 + 100,
+          overflow: "visible",
+        }}
+      >
+        <defs>
+          <linearGradient id={`connector-grad-${x}-${y}`} x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor={color} stopOpacity={opacity * 0.8} />
+            <stop offset="50%" stopColor={color} stopOpacity={opacity * 0.4} />
+            <stop offset="100%" stopColor={color} stopOpacity={opacity * 0.1} />
+          </linearGradient>
+          <filter id={`glow-${x}-${y}`}>
+            <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+            <feMerge>
+              <feMergeNode in="coloredBlur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+        <line
+          x1={Math.abs(x) + 50}
+          y1={Math.abs(y) + 50}
+          x2={Math.abs(x) + 50 + x}
+          y2={Math.abs(y) + 50 + y}
+          stroke={`url(#connector-grad-${x}-${y})`}
+          strokeWidth="2"
+          filter={`url(#glow-${x}-${y})`}
+          strokeLinecap="round"
+        />
+        {/* Glow orb at card end */}
+        <circle
+          cx={Math.abs(x) + 50 + x}
+          cy={Math.abs(y) + 50 + y}
+          r="6"
+          fill={color}
+          opacity={opacity * 0.6}
+          filter={`url(#glow-${x}-${y})`}
+        />
+      </svg>
+    );
+  };
+
   return (
     <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-30">
       {/* Spring - Categories */}
       {isChapterVisible(0) && (
         <div className="absolute inset-0 flex items-center justify-center" style={{ perspective: "1000px" }}>
-          {/* Render trails first (behind cards) */}
+          {/* Render connectors first (behind everything) */}
+          {categories.map((cat, idx) => {
+            const pos = getOrbitalPosition(idx, categories.length, 220, 0);
+            const { opacity } = getCardVisibility(0);
+            if (opacity < 0.01) return null;
+            return <OrbitalConnector key={`connector-${cat.id}`} x={pos.x} y={pos.y} color={cat.color} opacity={opacity} />;
+          })}
+          
+          {/* Render trails (behind cards) */}
           {categories.map((cat, idx) => {
             const trails = getTrailPositions(idx, categories.length, 220, 0);
             const { opacity } = getCardVisibility(0);
@@ -268,7 +339,15 @@ const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
       {/* Summer - Seasonal Products */}
       {isChapterVisible(1) && (
         <div className="absolute inset-0 flex items-center justify-center" style={{ perspective: "1000px" }}>
-          {/* Render trails first */}
+          {/* Render connectors first */}
+          {seasonalProducts.map((product, idx) => {
+            const pos = getOrbitalPosition(idx, seasonalProducts.length, 200, 1);
+            const { opacity } = getCardVisibility(1);
+            if (opacity < 0.01) return null;
+            return <OrbitalConnector key={`connector-${product.id}`} x={pos.x} y={pos.y} color={product.color} opacity={opacity} />;
+          })}
+          
+          {/* Render trails */}
           {seasonalProducts.map((product, idx) => {
             const trails = getTrailPositions(idx, seasonalProducts.length, 200, 1);
             const { opacity } = getCardVisibility(1);
@@ -341,7 +420,15 @@ const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
       {/* Autumn - Best Sellers */}
       {isChapterVisible(2) && (
         <div className="absolute inset-0 flex items-center justify-center" style={{ perspective: "1000px" }}>
-          {/* Render trails first */}
+          {/* Render connectors first */}
+          {bestSellers.map((product, idx) => {
+            const pos = getOrbitalPosition(idx, bestSellers.length, 210, 2);
+            const { opacity } = getCardVisibility(2);
+            if (opacity < 0.01) return null;
+            return <OrbitalConnector key={`connector-${product.id}`} x={pos.x} y={pos.y} color={product.color} opacity={opacity} />;
+          })}
+          
+          {/* Render trails */}
           {bestSellers.map((product, idx) => {
             const trails = getTrailPositions(idx, bestSellers.length, 210, 2);
             const { opacity } = getCardVisibility(2);
@@ -416,7 +503,15 @@ const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
       {/* Winter - Sale Items */}
       {isChapterVisible(3) && (
         <div className="absolute inset-0 flex items-center justify-center" style={{ perspective: "1000px" }}>
-          {/* Render trails first */}
+          {/* Render connectors first */}
+          {saleItems.map((product, idx) => {
+            const pos = getOrbitalPosition(idx, saleItems.length, 200, 3);
+            const { opacity } = getCardVisibility(3);
+            if (opacity < 0.01) return null;
+            return <OrbitalConnector key={`connector-${product.id}`} x={pos.x} y={pos.y} color={product.color} opacity={opacity} />;
+          })}
+          
+          {/* Render trails */}
           {saleItems.map((product, idx) => {
             const trails = getTrailPositions(idx, saleItems.length, 200, 3);
             const { opacity } = getCardVisibility(3);
