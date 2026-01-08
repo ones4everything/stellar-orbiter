@@ -64,23 +64,38 @@ const ChapterContent = ({ scrollProgress, activeChapterIndex }: ChapterContentPr
   };
 
   // Calculate opacity for each chapter based on scroll progress
+  // Chapter 0: Spring (0-25%), Chapter 1: Summer (25-50%), Chapter 2: Autumn (50-75%), Chapter 3: Winter (75-100%)
   const getChapterOpacity = (chapterIndex: number) => {
     const chapterStart = chapterIndex * 0.25;
     const chapterEnd = (chapterIndex + 1) * 0.25;
-    const fadeInDuration = 0.06;
-    const fadeOutDuration = 0.06;
-    const fadeInEnd = chapterStart + fadeInDuration;
-    const fadeOutStart = chapterEnd - fadeOutDuration;
+    const fadeInDuration = 0.05;
+    const fadeOutDuration = 0.05;
 
-    // First chapter should be fully visible at start
-    if (chapterIndex === 0 && scrollProgress < fadeInDuration) {
+    // Spring (index 0) - visible from start, fade out at end
+    if (chapterIndex === 0) {
+      if (scrollProgress < chapterEnd - fadeOutDuration) return 1;
+      if (scrollProgress < chapterEnd) return (chapterEnd - scrollProgress) / fadeOutDuration;
+      return 0;
+    }
+
+    // Winter (index 3) - fade in, stay visible till end
+    if (chapterIndex === 3) {
+      if (scrollProgress < chapterStart) return 0;
+      if (scrollProgress < chapterStart + fadeInDuration) {
+        return (scrollProgress - chapterStart) / fadeInDuration;
+      }
       return 1;
     }
 
+    // Middle chapters - fade in and fade out
     if (scrollProgress < chapterStart) return 0;
-    if (scrollProgress < fadeInEnd) return (scrollProgress - chapterStart) / fadeInDuration;
-    if (scrollProgress < fadeOutStart) return 1;
-    if (scrollProgress < chapterEnd) return (chapterEnd - scrollProgress) / fadeOutDuration;
+    if (scrollProgress < chapterStart + fadeInDuration) {
+      return (scrollProgress - chapterStart) / fadeInDuration;
+    }
+    if (scrollProgress < chapterEnd - fadeOutDuration) return 1;
+    if (scrollProgress < chapterEnd) {
+      return (chapterEnd - scrollProgress) / fadeOutDuration;
+    }
     return 0;
   };
 

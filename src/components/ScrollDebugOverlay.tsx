@@ -7,54 +7,58 @@ interface ScrollDebugOverlayProps {
 const ScrollDebugOverlay = ({ scrollProgress }: ScrollDebugOverlayProps) => {
   const percentage = Math.round(scrollProgress * 100);
   
-  // Determine current section - using overlapping ranges
-  const getCurrentSection = () => {
-    if (scrollProgress < 0.22) return { name: "Menu Categories", range: "0% - 28%" };
-    if (scrollProgress < 0.50) return { name: "Best Selling", range: "18% - 55%" };
-    if (scrollProgress < 0.75) return { name: "Seasonal Collection", range: "45% - 80%" };
-    return { name: "Featured Collection", range: "70% - 100%" };
+  // 4 Chapter structure
+  const chapters = [
+    { id: "spring", name: "🌸 Spring - Menu", start: 0, end: 0.25 },
+    { id: "summer", name: "☀️ Summer - Seasonal", start: 0.25, end: 0.50 },
+    { id: "autumn", name: "🍂 Autumn - Best Sellers", start: 0.50, end: 0.75 },
+    { id: "winter", name: "❄️ Winter - Sale", start: 0.75, end: 1.0 },
+  ];
+
+  // Determine current chapter
+  const getCurrentChapter = () => {
+    if (scrollProgress < 0.25) return chapters[0];
+    if (scrollProgress < 0.50) return chapters[1];
+    if (scrollProgress < 0.75) return chapters[2];
+    return chapters[3];
   };
 
-  // Get active effects - updated for overlapping transitions
+  // Get active effects
   const getActiveEffects = () => {
     const effects: string[] = [];
     
-    // Menu effects
-    if (scrollProgress < 0.15) effects.push("📂 Categories expanding");
-    if (scrollProgress >= 0.15 && scrollProgress < 0.28) effects.push("📂 Categories fading out");
+    // Chapter transitions
+    if (scrollProgress < 0.20) effects.push("📂 Categories visible");
+    if (scrollProgress >= 0.20 && scrollProgress < 0.25) effects.push("📂 Categories fading out");
     
-    // Best Selling effects (overlap with Menu & Seasonal)
-    if (scrollProgress >= 0.18 && scrollProgress < 0.28) effects.push("🔥 Best Selling fading in");
-    if (scrollProgress >= 0.28 && scrollProgress < 0.45) effects.push("🔥 Best Selling visible");
-    if (scrollProgress >= 0.45 && scrollProgress < 0.55) effects.push("🔥 Best Selling fading out");
+    if (scrollProgress >= 0.25 && scrollProgress < 0.30) effects.push("☀️ Summer fading in");
+    if (scrollProgress >= 0.30 && scrollProgress < 0.45) effects.push("☀️ Summer products visible");
+    if (scrollProgress >= 0.45 && scrollProgress < 0.50) effects.push("☀️ Summer fading out");
     
-    // Seasonal effects (overlap with Best Selling & Featured)
-    if (scrollProgress >= 0.45 && scrollProgress < 0.55) effects.push("🌿 Seasonal fading in");
-    if (scrollProgress >= 0.55 && scrollProgress < 0.70) effects.push("🌿 Seasonal visible");
-    if (scrollProgress >= 0.70 && scrollProgress < 0.80) effects.push("🌿 Seasonal fading out");
+    if (scrollProgress >= 0.50 && scrollProgress < 0.55) effects.push("🍂 Autumn fading in");
+    if (scrollProgress >= 0.55 && scrollProgress < 0.70) effects.push("🍂 Best sellers visible");
+    if (scrollProgress >= 0.70 && scrollProgress < 0.75) effects.push("🍂 Autumn fading out");
+    
+    if (scrollProgress >= 0.75 && scrollProgress < 0.80) effects.push("❄️ Winter fading in");
+    if (scrollProgress >= 0.80) effects.push("❄️ Sale items visible");
     
     // Seasonal particles
-    if (scrollProgress >= 0.50 && scrollProgress < 0.625) effects.push("🌸 Spring particles");
-    if (scrollProgress >= 0.625 && scrollProgress < 0.75) effects.push("☀️ Summer particles");
-    if (scrollProgress >= 0.75 && scrollProgress < 0.875) effects.push("🍂 Autumn particles");
-    if (scrollProgress >= 0.875) effects.push("❄️ Winter particles");
-    
-    // Featured effects (overlap with Seasonal)
-    if (scrollProgress >= 0.70 && scrollProgress < 0.80) effects.push("👑 Featured fading in");
-    if (scrollProgress >= 0.80) effects.push("👑 Featured visible");
+    if (scrollProgress < 0.25) effects.push("🌸 Spring particles");
+    if (scrollProgress >= 0.25 && scrollProgress < 0.50) effects.push("☀️ Summer particles");
+    if (scrollProgress >= 0.50 && scrollProgress < 0.75) effects.push("🍂 Autumn particles");
+    if (scrollProgress >= 0.75) effects.push("❄️ Winter particles");
     
     return effects;
   };
 
-  const currentSection = getCurrentSection();
+  const currentChapter = getCurrentChapter();
   const activeEffects = getActiveEffects();
 
-  // Updated sections to show overlapping ranges
-  const sections = [
-    { name: "Menu", start: 0, end: 0.28, color: "bg-primary" },
-    { name: "Best Selling", start: 0.18, end: 0.55, color: "bg-accent" },
-    { name: "Seasonal", start: 0.45, end: 0.80, color: "bg-green-500" },
-    { name: "Featured", start: 0.70, end: 1, color: "bg-purple-500" },
+  const sectionColors = [
+    "bg-pink-500",
+    "bg-yellow-500", 
+    "bg-orange-500",
+    "bg-cyan-500",
   ];
 
   return (
@@ -65,19 +69,19 @@ const ScrollDebugOverlay = ({ scrollProgress }: ScrollDebugOverlayProps) => {
       transition={{ delay: 1 }}
     >
       <div className="flex items-center justify-between mb-3">
-        <span className="text-muted-foreground text-xs uppercase tracking-wider">Scroll Logic Demo</span>
+        <span className="text-muted-foreground text-xs uppercase tracking-wider">4-Chapter Scroll</span>
         <span className="text-primary font-bold">{percentage}%</span>
       </div>
 
-      {/* Progress bar with sections */}
+      {/* Progress bar with chapters */}
       <div className="relative h-3 bg-muted rounded-full mb-4 overflow-hidden">
-        {sections.map((section) => (
+        {chapters.map((chapter, idx) => (
           <div
-            key={section.name}
-            className={`absolute top-0 h-full ${section.color} opacity-30`}
+            key={chapter.id}
+            className={`absolute top-0 h-full ${sectionColors[idx]} opacity-30`}
             style={{
-              left: `${section.start * 100}%`,
-              width: `${(section.end - section.start) * 100}%`,
+              left: `${chapter.start * 100}%`,
+              width: `${(chapter.end - chapter.start) * 100}%`,
             }}
           />
         ))}
@@ -85,47 +89,56 @@ const ScrollDebugOverlay = ({ scrollProgress }: ScrollDebugOverlayProps) => {
           className="absolute top-0 h-full bg-primary rounded-full"
           style={{ width: `${percentage}%` }}
         />
-        {/* Section markers */}
+        {/* Chapter markers */}
         {[0.25, 0.50, 0.75].map((marker) => (
           <div
             key={marker}
-            className="absolute top-0 h-full w-px bg-border"
+            className="absolute top-0 h-full w-0.5 bg-foreground/30"
             style={{ left: `${marker * 100}%` }}
           />
         ))}
       </div>
 
-      {/* Current section */}
+      {/* Current chapter */}
       <div className="mb-3 p-2 bg-muted/50 rounded">
-        <div className="text-xs text-muted-foreground mb-1">Current Section</div>
-        <div className="text-foreground font-semibold">{currentSection.name}</div>
-        <div className="text-xs text-muted-foreground">{currentSection.range}</div>
+        <div className="text-xs text-muted-foreground mb-1">Current Chapter</div>
+        <div className="text-foreground font-semibold">{currentChapter.name}</div>
+        <div className="text-xs text-muted-foreground">
+          {Math.round(currentChapter.start * 100)}% - {Math.round(currentChapter.end * 100)}%
+        </div>
       </div>
 
       {/* Active effects */}
       <div className="space-y-1">
         <div className="text-xs text-muted-foreground mb-2">Active Effects</div>
-        {activeEffects.map((effect, index) => (
-          <motion.div
-            key={effect}
-            className="text-xs text-foreground/80 pl-2 border-l-2 border-primary"
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.05 }}
-          >
-            {effect}
-          </motion.div>
-        ))}
+        {activeEffects.length === 0 ? (
+          <div className="text-xs text-muted-foreground/50 italic">None</div>
+        ) : (
+          activeEffects.map((effect, index) => (
+            <motion.div
+              key={effect}
+              className="text-xs text-foreground/80 pl-2 border-l-2 border-primary"
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.05 }}
+            >
+              {effect}
+            </motion.div>
+          ))
+        )}
       </div>
 
-      {/* Section legend */}
+      {/* Chapter legend */}
       <div className="mt-4 pt-3 border-t border-border">
-        <div className="text-xs text-muted-foreground mb-2">Sections</div>
-        <div className="grid grid-cols-2 gap-1 text-xs">
-          {sections.map((section) => (
-            <div key={section.name} className="flex items-center gap-1">
-              <div className={`w-2 h-2 rounded-full ${section.color}`} />
-              <span className="text-muted-foreground">{section.name}</span>
+        <div className="text-xs text-muted-foreground mb-2">Chapters</div>
+        <div className="space-y-1 text-xs">
+          {chapters.map((chapter, idx) => (
+            <div 
+              key={chapter.id} 
+              className={`flex items-center gap-2 ${currentChapter.id === chapter.id ? 'text-foreground font-medium' : 'text-muted-foreground'}`}
+            >
+              <div className={`w-2 h-2 rounded-full ${sectionColors[idx]}`} />
+              <span>{chapter.name}</span>
             </div>
           ))}
         </div>
