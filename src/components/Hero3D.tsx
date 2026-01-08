@@ -112,15 +112,18 @@ const Hero3D = () => {
     };
   }, []);
 
-  // Jump to a specific chapter
+  // Jump to a specific chapter (uses same calculation as handleScroll for consistency)
   const jumpToChapter = useCallback((targetProgress: number) => {
     const el = containerRef.current;
     if (!el) return;
 
-    const top = el.getBoundingClientRect().top + window.scrollY;
-    const scrollableHeight = el.scrollHeight - window.innerHeight;
-    const targetScroll = top + scrollableHeight * targetProgress;
+    // Use the same calculation as handleScroll for consistency
+    const startY = el.getBoundingClientRect().top + window.scrollY;
+    const height = el.getBoundingClientRect().height;
+    const endY = startY + height - window.innerHeight;
+    const range = Math.max(1, endY - startY);
 
+    const targetScroll = startY + range * targetProgress;
     window.scrollTo({ top: Math.max(0, targetScroll), behavior: "smooth" });
   }, []);
 
