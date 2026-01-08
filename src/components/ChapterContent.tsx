@@ -67,17 +67,12 @@ const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
     const chapterStart = chapterIndex * 0.25;
     const chapterEnd = (chapterIndex + 1) * 0.25;
     
-    // Outside chapter range - hidden
     if (scrollProgress < chapterStart - 0.02 || scrollProgress > chapterEnd + 0.02) {
       return { opacity: 0, scale: 0.85 };
     }
     
     const chapterProgress = (scrollProgress - chapterStart) / 0.25;
-    
-    // First chapter starts visible, others fade in
     const fadeInProgress = chapterIndex === 0 ? 1 : Math.min(1, chapterProgress / 0.1);
-    
-    // Fade out at chapter end
     const fadeOutMultiplier = chapterProgress > 0.9 ? 1 - ((chapterProgress - 0.9) / 0.1) : 1;
     
     return { 
@@ -86,55 +81,43 @@ const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
     };
   };
 
-  // Card positioning - orbit around center
-  const getCardPosition = (index: number, total: number, radius: number) => {
+  // ORBITAL ROTATION: Cards orbit around center following the sphere's rotation
+  const getOrbitalPosition = (
+    index: number, 
+    total: number, 
+    radius: number, 
+    chapterIndex: number
+  ) => {
+    // Base angle for this card (evenly distributed)
+    const baseAngle = (index / total) * Math.PI * 2 - Math.PI / 2;
+    
+    // Calculate rotation based on scroll within this chapter
+    const chapterStart = chapterIndex * 0.25;
+    const chapterProgress = Math.max(0, Math.min(1, (scrollProgress - chapterStart) / 0.25));
+    
+    // Rotate cards as user scrolls (half turn per chapter for visible orbit effect)
+    const rotationOffset = chapterProgress * Math.PI * 0.5;
+    const angle = baseAngle + rotationOffset;
+    
     if (isMobile) {
+      // Mobile: vertical stack with subtle horizontal sway
       const spacing = 85;
       const startY = -((total - 1) * spacing) / 2;
-      return { x: 0, y: startY + index * spacing + 20 };
+      const baseY = startY + index * spacing + 20;
+      const swayX = Math.sin(rotationOffset + index * 0.8) * 20;
+      
+      return { 
+        x: swayX, 
+        y: baseY,
+        rotateY: chapterProgress * 12 * (index % 2 === 0 ? 1 : -1),
+      };
     }
-    const angle = (index / total) * Math.PI * 2 - Math.PI / 2;
+    
+    // Desktop: true orbital motion around center
     return {
       x: Math.cos(angle) * radius,
       y: Math.sin(angle) * radius * 0.55,
-    };
-  };
-
-  const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
-
-  const getChapterProgress = (chapterIndex: number) => {
-    const chapterStart = chapterIndex * 0.25;
-    return clamp01((scrollProgress - chapterStart) / 0.25);
-  };
-
-  // Subtle scroll-driven parallax: cards farther from center move slightly less.
-  const applyParallax = (
-    basePos: { x: number; y: number },
-    chapterIndex: number,
-    radius: number
-  ) => {
-    const t = getChapterProgress(chapterIndex); // 0..1 within chapter
-    const shift = (t - 0.5) * 26; // px
-
-    const distNorm = isMobile
-      ? Math.min(1, Math.abs(basePos.y) / 180)
-      : Math.min(1, Math.hypot(basePos.x, basePos.y) / Math.max(1, radius));
-
-    const mult = 1 - distNorm * 0.45; // farther => smaller motion
-
-    if (isMobile) {
-      return {
-        x: basePos.x + shift * mult * 0.12,
-        y: basePos.y + shift * mult * (basePos.y / 180),
-      };
-    }
-
-    const nx = basePos.x / Math.max(1, radius);
-    const ny = basePos.y / Math.max(1, radius * 0.55);
-
-    return {
-      x: basePos.x + shift * mult * nx,
-      y: basePos.y + shift * mult * ny,
+      rotateY: (Math.cos(angle) / radius) * radius * 8, // 3D flip based on position
     };
   };
 
@@ -147,12 +130,11 @@ const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
 
   return (
     <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-30">
-      {/* Spring - Categories (sequential appearance) */}
+      {/* Spring - Categories */}
       {isChapterVisible(0) && (
-        <div className="absolute inset-0 flex items-center justify-center">
+        <div className="absolute inset-0 flex items-center justify-center" style={{ perspective: "1000px" }}>
           {categories.map((cat, idx) => {
-            const basePos = getCardPosition(idx, categories.length, 220);
-            const pos = applyParallax(basePos, 0, 220);
+            const pos = getOrbitalPosition(idx, categories.length, 220, 0);
             const Icon = cat.icon;
             const { opacity, scale } = getCardVisibility(0);
 
@@ -165,8 +147,9 @@ const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
                 style={{
                   left: `calc(50% + ${pos.x}px)`,
                   top: `calc(50% + ${pos.y}px)`,
-                  transform: "translate(-50%, -50%)",
                   opacity,
+                  transform: `translate(-50%, -50%) rotateY(${pos.rotateY}deg)`,
+                  transformStyle: "preserve-3d",
                 }}
                 animate={{ scale }}
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
@@ -191,12 +174,11 @@ const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
         </div>
       )}
 
-      {/* Summer - Seasonal Products (sequential appearance) */}
+      {/* Summer - Seasonal Products */}
       {isChapterVisible(1) && (
-        <div className="absolute inset-0 flex items-center justify-center">
+        <div className="absolute inset-0 flex items-center justify-center" style={{ perspective: "1000px" }}>
           {seasonalProducts.map((product, idx) => {
-            const basePos = getCardPosition(idx, seasonalProducts.length, 200);
-            const pos = applyParallax(basePos, 1, 200);
+            const pos = getOrbitalPosition(idx, seasonalProducts.length, 200, 1);
             const Icon = product.icon;
             const { opacity, scale } = getCardVisibility(1);
 
@@ -209,8 +191,9 @@ const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
                 style={{
                   left: `calc(50% + ${pos.x}px)`,
                   top: `calc(50% + ${pos.y}px)`,
-                  transform: "translate(-50%, -50%)",
                   opacity,
+                  transform: `translate(-50%, -50%) rotateY(${pos.rotateY}deg)`,
+                  transformStyle: "preserve-3d",
                 }}
                 animate={{ scale }}
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
@@ -251,12 +234,11 @@ const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
         </div>
       )}
 
-      {/* Autumn - Best Sellers (sequential appearance) */}
+      {/* Autumn - Best Sellers */}
       {isChapterVisible(2) && (
-        <div className="absolute inset-0 flex items-center justify-center">
+        <div className="absolute inset-0 flex items-center justify-center" style={{ perspective: "1000px" }}>
           {bestSellers.map((product, idx) => {
-            const basePos = getCardPosition(idx, bestSellers.length, 210);
-            const pos = applyParallax(basePos, 2, 210);
+            const pos = getOrbitalPosition(idx, bestSellers.length, 210, 2);
             const Icon = product.icon;
             const { opacity, scale } = getCardVisibility(2);
 
@@ -269,8 +251,9 @@ const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
                 style={{
                   left: `calc(50% + ${pos.x}px)`,
                   top: `calc(50% + ${pos.y}px)`,
-                  transform: "translate(-50%, -50%)",
                   opacity,
+                  transform: `translate(-50%, -50%) rotateY(${pos.rotateY}deg)`,
+                  transformStyle: "preserve-3d",
                 }}
                 animate={{ scale }}
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
@@ -313,12 +296,11 @@ const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
         </div>
       )}
 
-      {/* Winter - Sale Items (sequential appearance) */}
+      {/* Winter - Sale Items */}
       {isChapterVisible(3) && (
-        <div className="absolute inset-0 flex items-center justify-center">
+        <div className="absolute inset-0 flex items-center justify-center" style={{ perspective: "1000px" }}>
           {saleItems.map((product, idx) => {
-            const basePos = getCardPosition(idx, saleItems.length, 200);
-            const pos = applyParallax(basePos, 3, 200);
+            const pos = getOrbitalPosition(idx, saleItems.length, 200, 3);
             const Icon = product.icon;
             const { opacity, scale } = getCardVisibility(3);
 
@@ -331,8 +313,9 @@ const ChapterContent = ({ scrollProgress }: ChapterContentProps) => {
                 style={{
                   left: `calc(50% + ${pos.x}px)`,
                   top: `calc(50% + ${pos.y}px)`,
-                  transform: "translate(-50%, -50%)",
                   opacity,
+                  transform: `translate(-50%, -50%) rotateY(${pos.rotateY}deg)`,
+                  transformStyle: "preserve-3d",
                 }}
                 animate={{ scale }}
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
