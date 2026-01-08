@@ -9,43 +9,43 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 const DEBUG_STORAGE_KEY = "lovable:hero3d:debug-overlay";
 
-// 4 chapters with seasonal themes
+// 4 chapters with seasonal themes - exact station mapping
 export const CHAPTERS = [
   { 
     id: "spring", 
-    label: "Menu", 
+    label: "Categories", 
     season: "Spring", 
     progress: 0, 
     icon: Flower2, 
     accent: "hsl(330, 80%, 65%)",
-    description: "Browse Categories"
+    description: "Browse Our Collections"
   },
   { 
     id: "summer", 
-    label: "Seasonal", 
+    label: "Seasonal Products", 
     season: "Summer", 
     progress: 0.25, 
     icon: Sun, 
     accent: "hsl(45, 100%, 50%)",
-    description: "Limited Edition"
+    description: "Summer Collection"
   },
   { 
-    id: "autumn", 
+    id: "fall", 
     label: "Best Selling", 
-    season: "Autumn", 
+    season: "Fall", 
     progress: 0.5, 
     icon: Leaf, 
     accent: "hsl(25, 90%, 55%)",
-    description: "Top Products"
+    description: "Top Rated Products"
   },
   { 
     id: "winter", 
-    label: "Sale", 
+    label: "Featured Products", 
     season: "Winter", 
     progress: 0.75, 
     icon: Snowflake, 
     accent: "hsl(200, 80%, 70%)",
-    description: "Special Offers"
+    description: "Editor's Picks"
   },
 ] as const;
 
